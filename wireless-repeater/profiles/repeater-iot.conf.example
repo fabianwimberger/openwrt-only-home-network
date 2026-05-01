@@ -1,0 +1,31 @@
+# IoT-style repeater: 5 GHz backhaul to ap-main, broadcasts a single isolated
+# SSID on 2.4 GHz for short-range / IoT clients (no roaming domain — IoT chips
+# don't need to follow you around the house and often mishandle FT).
+
+DEVICE_IP="192.168.1.20"
+NODE_NAME="repeater-iot"
+
+# 2.4 GHz client AP on ch11 (orthogonal to ap-main ch1 and ap-upper ch6).
+RADIO0_DISABLED="0"
+RADIO0_COUNTRY="US"
+RADIO0_CHANNEL="11"
+RADIO0_HTMODE="HE20"
+
+# 5 GHz used as backhaul only — channel must match the wired AP (ap-main ch36).
+RADIO1_DISABLED="0"
+RADIO1_COUNTRY="US"
+RADIO1_CHANNEL="36"
+RADIO1_HTMODE="HE80"
+
+# WDS 4-addr STA backhaul on 5 GHz to ap-main.
+BACKHAUL_DEVICE="radio1"
+
+# Not part of the roaming domain.
+AP_ENABLED="0"
+AP_IOT_ENABLED="0"
+
+# Site-specific SSID (no FT, no usteer).
+AP_LOCAL_ENABLED="1"
+AP_LOCAL_DEVICE="radio0"
+AP_LOCAL_SSID="MyHome-Door"
+AP_LOCAL_KEY="changeme-local"

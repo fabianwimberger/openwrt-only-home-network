@@ -1,0 +1,31 @@
+# Primary wired AP. Hosts the WDS backhaul on both bands so any repeater
+# can pick whichever radio it has the stronger path to.
+
+DEVICE_IP="192.168.1.10"
+NODE_NAME="ap-main"
+
+# 2.4 GHz on ch1 (split with ap-upper on ch6 — leaves ch11 for repeaters).
+RADIO0_COUNTRY="US"
+RADIO0_CHANNEL="1"
+RADIO0_HTMODE="HE20"
+
+# 5 GHz on ch36/HE80 — shared with ap-upper on purpose. Single-channel
+# 5 GHz roam domain so FT can complete on the same radio.
+RADIO1_COUNTRY="US"
+RADIO1_CHANNEL="36"
+RADIO1_HTMODE="HE80"
+
+# Hidden WDS-AP backhaul on both radios.
+BACKHAUL_AP_24_ENABLED="1"
+BACKHAUL_AP_5_ENABLED="1"
+
+AP_FT_ENABLED="1"
+
+# Main roaming SSID (advertised on both radios).
+AP_SSID="MyHome"
+AP_KEY="changeme-main"
+
+# Optional second SSID, e.g. for IoT (no FT, PMF on, 2.4 GHz only).
+AP_IOT_ENABLED="1"
+AP_IOT_SSID="MyHome-IoT"
+AP_IOT_KEY="changeme-iot"

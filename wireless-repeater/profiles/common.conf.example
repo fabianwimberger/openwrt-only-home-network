@@ -1,0 +1,41 @@
+# Common settings shared by every wireless-repeater profile.
+# Copy this file to common.conf and edit. The real common.conf is gitignored.
+
+OPENWRT_VERSION="25.12.2"
+OPENWRT_TARGET="mediatek/filogic"
+OPENWRT_PROFILE="cudy_re3000-v1"
+
+# Root password baked into the firmware. CHANGE THIS.
+ROOT_PASSWORD="changeme"
+
+# Optional SSH public key (single line). Leave empty for password-only access.
+SSH_PUBKEY=""
+
+# Upstream gateway and DNS — same values as on your wired APs.
+LAN_GATEWAY="192.168.1.1"
+LAN_DNS="192.168.1.1"
+
+# Timezone. POSIX TZ string + zoneinfo name.
+TIMEZONE="UTC"
+ZONENAME="UTC"
+
+# Backhaul SSID — must match the wired AP this repeater backhauls through.
+# Override per-profile (e.g. anchor repeater that pins to a different AP).
+BACKHAUL_SSID="MyHome-Backhaul"
+BACKHAUL_KEY="changeme-backhaul"
+
+# 802.11r mobility domain — only used when AP_ENABLED=1, must match the wired APs.
+MOBILITY_DOMAIN="0001"
+
+PACKAGES="\
+  -wpad-basic-mbedtls wpad-mbedtls \
+  -dnsmasq -odhcp6c -odhcpd-ipv6only \
+  -firewall4 -nftables -kmod-nft-offload \
+  -ppp -ppp-mod-pppoe \
+  -luci-app-attendedsysupgrade \
+  usteer \
+  prometheus-node-exporter-lua \
+  prometheus-node-exporter-lua-openwrt \
+  prometheus-node-exporter-lua-wifi \
+  prometheus-node-exporter-lua-wifi_stations \
+  prometheus-node-exporter-lua-netstat"

@@ -1,0 +1,49 @@
+# Common settings shared by every wired-AP profile.
+# Copy this file to common.conf and edit. The real common.conf is gitignored.
+
+# OpenWrt ImageBuilder version. Match a release that supports your device.
+OPENWRT_VERSION="25.12.2"
+
+# Target and profile — find at https://downloads.openwrt.org/releases/<version>/targets/
+OPENWRT_TARGET="mediatek/filogic"
+OPENWRT_PROFILE="zyxel_nwa50ax-pro"
+
+# Root password baked into the firmware. CHANGE THIS.
+ROOT_PASSWORD="changeme"
+
+# Optional SSH public key (single line). Leave empty for password-only access.
+SSH_PUBKEY=""
+
+# Upstream gateway and DNS — point at your existing router/resolver.
+LAN_GATEWAY="192.168.1.1"
+LAN_DNS="192.168.1.1"
+
+# Timezone. POSIX TZ string + zoneinfo name.
+# Find your zone with `tzselect` or at https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
+TIMEZONE="UTC"
+ZONENAME="UTC"
+
+# Backhaul SSID — hidden 4-addr (WDS) AP that wireless repeaters connect to.
+# Use a dedicated SSID, not your client SSID. Treat the key as secret.
+BACKHAUL_SSID="MyHome-Backhaul"
+BACKHAUL_KEY="changeme-backhaul"
+
+# 802.11r mobility domain — must match across every AP that broadcasts the
+# main roaming SSID. Pick any 4-hex value unique to your network.
+MOBILITY_DOMAIN="0001"
+
+# ImageBuilder package list. Drop firewall/dhcp/ppp because the AP is a
+# pure L2 bridge; keep usteer for client steering and the Prometheus exporter
+# for fleet-wide metrics.
+PACKAGES="\
+  -wpad-basic-mbedtls wpad-mbedtls \
+  -dnsmasq -odhcp6c -odhcpd-ipv6only \
+  -firewall4 -nftables -kmod-nft-offload \
+  -ppp -ppp-mod-pppoe \
+  -luci-app-attendedsysupgrade \
+  usteer \
+  prometheus-node-exporter-lua \
+  prometheus-node-exporter-lua-openwrt \
+  prometheus-node-exporter-lua-wifi \
+  prometheus-node-exporter-lua-wifi_stations \
+  prometheus-node-exporter-lua-netstat"

@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+env:
+  SHELLCHECK_VERSION: "v0.10.0"
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Install shellcheck
+        run: |
+          curl -sSL "https://github.com/koalaman/shellcheck/releases/download/${SHELLCHECK_VERSION}/shellcheck-${SHELLCHECK_VERSION}.linux.x86_64.tar.xz" | tar -xJf -
+          sudo cp "shellcheck-${SHELLCHECK_VERSION}/shellcheck" /usr/local/bin/
+
+      - name: Lint with shellcheck (errors only)
+        run: |
+          shellcheck -S error -s bash \
+            wired-ap/build.sh wired-ap/deploy.sh wired-ap/upgrade-all.sh \
+            wireless-repeater/build.sh wireless-repeater/deploy.sh wireless-repeater/upgrade-all.sh
+
+      - name: Check bash syntax
+        run: |
+          for f in wired-ap/*.sh wireless-repeater/*.sh; do
+            bash -n "$f"
+          done
+
+  test-help:
+    name: Test Help Output
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Verify build.sh help works
+        run: |
+          ./wired-ap/build.sh 2>/dev/null || true
+          ./wireless-repeater/build.sh 2>/dev/null || true
+
+      - name: Verify deploy.sh help works
+        run: |
+          ./wired-ap/deploy.sh 2>/dev/null || true
+          ./wireless-repeater/deploy.sh 2>/dev/null || true

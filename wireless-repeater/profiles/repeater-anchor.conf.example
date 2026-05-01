@@ -1,0 +1,27 @@
+# Anchor repeater: 2.4 GHz only because the 5 GHz path to any wired AP is
+# too weak from this site. Backhauls to ap-upper (which advertises a distinct
+# backhaul SSID) so the STA pins to the AP it actually has line-of-sight to,
+# rather than the closest-by-name ap-main.
+
+DEVICE_IP="192.168.1.21"
+NODE_NAME="repeater-anchor"
+
+# 2.4 GHz on ch6/HE20 — must match ap-upper radio0.
+RADIO0_DISABLED="0"
+RADIO0_COUNTRY="US"
+RADIO0_CHANNEL="6"
+RADIO0_HTMODE="HE20"
+
+RADIO1_DISABLED="1"
+
+# WDS 4-addr STA backhaul on 2.4 GHz to ap-upper's distinct backhaul SSID.
+BACKHAUL_DEVICE="radio0"
+BACKHAUL_SSID="MyHome-Backhaul-Upper"
+
+AP_ENABLED="0"
+AP_IOT_ENABLED="0"
+
+AP_LOCAL_ENABLED="1"
+AP_LOCAL_DEVICE="radio0"
+AP_LOCAL_SSID="MyHome-Garden"
+AP_LOCAL_KEY="changeme-local"

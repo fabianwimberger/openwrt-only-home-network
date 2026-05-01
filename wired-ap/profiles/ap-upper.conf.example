@@ -1,0 +1,31 @@
+# Secondary wired AP. Same roaming SSID and mobility domain as ap-main, but
+# advertises a *distinct* backhaul SSID on 2.4 GHz so a repeater with poor
+# signal to ap-main can be pinned here explicitly. 5 GHz stays client-only
+# (no backhaul) — repeaters with a clean 5 GHz path use ap-main instead.
+
+DEVICE_IP="192.168.1.11"
+NODE_NAME="ap-upper"
+
+# 2.4 GHz on ch6 (orthogonal to ch1 on ap-main).
+RADIO0_COUNTRY="US"
+RADIO0_CHANNEL="6"
+RADIO0_HTMODE="HE20"
+
+# 5 GHz shares ch36/HE80 with ap-main — single-channel roam domain.
+RADIO1_COUNTRY="US"
+RADIO1_CHANNEL="36"
+RADIO1_HTMODE="HE80"
+
+# 2.4 GHz backhaul under a distinct SSID so anchor repeaters pin here.
+BACKHAUL_AP_24_ENABLED="1"
+BACKHAUL_AP_5_ENABLED="0"
+BACKHAUL_SSID="MyHome-Backhaul-Upper"
+
+AP_FT_ENABLED="1"
+
+AP_SSID="MyHome"
+AP_KEY="changeme-main"
+
+AP_IOT_ENABLED="1"
+AP_IOT_SSID="MyHome-IoT"
+AP_IOT_KEY="changeme-iot"
