@@ -54,6 +54,9 @@ uci set wireless.wds_sta.encryption='psk2'
 uci set wireless.wds_sta.key='${BACKHAUL_KEY}'
 uci set wireless.wds_sta.wds='1'
 
+# === Hidden downstream WDS-AP — lets another repeater backhaul through us ===
+${BACKHAUL_AP_BLOCK}
+
 # === Main roaming SSID (WPA2-Personal + 802.11r FT-PSK) — optional ===
 ${AP_BLOCK}
 
