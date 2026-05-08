@@ -79,6 +79,24 @@ uci set wireless.iot_ap.key='${AP_IOT_KEY}'
 uci set wireless.iot_ap.ieee80211w='1'"
 fi
 
+# Downstream WDS-AP block — daisy-chain another repeater through this one.
+# Falls back to the common BACKHAUL_KEY so a downstream STA using the shared
+# common.conf credentials can still associate.
+BACKHAUL_AP_BLOCK=""
+if [[ "${BACKHAUL_AP_ENABLED:-0}" == "1" ]]; then
+    BACKHAUL_AP_BLOCK="uci set wireless.bh_ap=wifi-iface
+uci set wireless.bh_ap.device='${BACKHAUL_AP_DEVICE}'
+uci set wireless.bh_ap.network='lan'
+uci set wireless.bh_ap.mode='ap'
+uci set wireless.bh_ap.ssid='${BACKHAUL_AP_SSID}'
+uci set wireless.bh_ap.encryption='psk2'
+uci set wireless.bh_ap.wpa_pairwise='CCMP'
+uci set wireless.bh_ap.key='${BACKHAUL_AP_KEY:-$BACKHAUL_KEY}'
+uci set wireless.bh_ap.hidden='1'
+uci set wireless.bh_ap.wds='1'
+uci set wireless.bh_ap.isolate='0'"
+fi
+
 # Site-specific SSID block (no FT, no roaming)
 AP_LOCAL_BLOCK=""
 if [[ "${AP_LOCAL_ENABLED:-0}" == "1" ]]; then
@@ -130,7 +148,7 @@ export LAN_GATEWAY LAN_DNS TIMEZONE ZONENAME
 export RADIO0_DISABLED RADIO0_COUNTRY RADIO0_CHANNEL RADIO0_HTMODE
 export RADIO1_DISABLED RADIO1_LINES
 export BACKHAUL_DEVICE BACKHAUL_SSID BACKHAUL_KEY
-export AP_BLOCK AP_IOT_BLOCK AP_LOCAL_BLOCK USTEER_BLOCK SSH_BLOCK
+export AP_BLOCK AP_IOT_BLOCK AP_LOCAL_BLOCK BACKHAUL_AP_BLOCK USTEER_BLOCK SSH_BLOCK
 
 envsubst < "$TEMPLATES_DIR/99-device-setup.tpl" > "$TMPDIR/files/etc/uci-defaults/99-device-setup"
 chmod +x "$TMPDIR/files/etc/uci-defaults/99-device-setup"
