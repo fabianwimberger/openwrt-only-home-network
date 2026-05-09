@@ -35,6 +35,18 @@ source "$PROFILE_FILE"
 echo "=== Building OpenWrt $OPENWRT_VERSION for $OPENWRT_PROFILE ==="
 echo "    Profile: $PROFILE_NAME"
 echo "    Device IP: $DEVICE_IP"
+if [[ -z "${MOBILITY_DOMAIN:-}" ]]; then
+    echo "Error: MOBILITY_DOMAIN is required. Set a unique 4-hex value in your profile config."
+    exit 1
+fi
+
+for var_name in ROOT_PASSWORD BACKHAUL_KEY; do
+    val="${!var_name:-}"
+    if [[ "$val" == "changeme" || "$val" == "changeme-backhaul" || "$val" == "changeme-main" || "$val" == "changeme-iot" ]]; then
+        echo "Error: $var_name is set to a default placeholder '$val'. Set a real value."
+        exit 1
+    fi
+done
 
 TMPDIR="$(mktemp -d)"
 trap 'rm -rf "$TMPDIR"' EXIT
@@ -121,6 +133,7 @@ docker build \
     --build-arg "OPENWRT_VERSION=$OPENWRT_VERSION" \
     --build-arg "OPENWRT_TARGET=$OPENWRT_TARGET" \
     -t "$DOCKER_TAG" \
+    --pull \
     "$SCRIPT_DIR"
 
 OUTPUT_DIR="$SCRIPT_DIR/output/$PROFILE_NAME"

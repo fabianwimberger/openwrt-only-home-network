@@ -50,10 +50,10 @@ read -rp "Continue? [y/N] " confirm
 [[ "$confirm" != [yY] ]] && echo "Aborted." && exit 0
 
 echo "=== Uploading firmware ==="
-timeout 30 sshpass -p "$ROOT_PASSWORD" scp -O $SSH_OPTS "$FIRMWARE" "root@${DEVICE_IP}:/tmp/${FIRMWARE_NAME}"
+timeout 120 sshpass -p "$ROOT_PASSWORD" scp -O $SSH_OPTS "$FIRMWARE" "root@${DEVICE_IP}:/tmp/${FIRMWARE_NAME}"
 
 echo "=== Starting sysupgrade (no config preservation) ==="
-timeout 30 sshpass -p "$ROOT_PASSWORD" ssh $SSH_OPTS "root@${DEVICE_IP}" "sysupgrade -n /tmp/${FIRMWARE_NAME}" || true
+timeout 120 sshpass -p "$ROOT_PASSWORD" ssh $SSH_OPTS "root@${DEVICE_IP}" "sysupgrade -n /tmp/${FIRMWARE_NAME}" || true
 
 echo ""
 echo "=== Device is upgrading and will reboot ==="
