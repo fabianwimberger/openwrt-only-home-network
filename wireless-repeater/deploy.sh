@@ -41,7 +41,7 @@ if [[ -z "$FIRMWARE" ]]; then
 fi
 
 FIRMWARE_NAME="$(basename "$FIRMWARE")"
-SSH_OPTS="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
+SSH_OPTS=(-o StrictHostKeyChecking=accept-new)
 
 echo "=== Deploying to $DEVICE_IP ==="
 echo "    Firmware: $FIRMWARE_NAME"
@@ -50,10 +50,10 @@ read -rp "Continue? [y/N] " confirm
 [[ "$confirm" != [yY] ]] && echo "Aborted." && exit 0
 
 echo "=== Uploading firmware ==="
-timeout 120 sshpass -p "$ROOT_PASSWORD" scp -O $SSH_OPTS "$FIRMWARE" "root@${DEVICE_IP}:/tmp/${FIRMWARE_NAME}"
+SSHPASS="$ROOT_PASSWORD" timeout 120 sshpass -e scp -O "${SSH_OPTS[@]}" "$FIRMWARE" "root@${DEVICE_IP}:/tmp/${FIRMWARE_NAME}"
 
 echo "=== Starting sysupgrade (no config preservation) ==="
-timeout 120 sshpass -p "$ROOT_PASSWORD" ssh $SSH_OPTS "root@${DEVICE_IP}" "sysupgrade -n /tmp/${FIRMWARE_NAME}" || true
+SSHPASS="$ROOT_PASSWORD" timeout 120 sshpass -e ssh "${SSH_OPTS[@]}" "root@${DEVICE_IP}" "sysupgrade -n /tmp/${FIRMWARE_NAME}" || true
 
 echo ""
 echo "=== Device is upgrading and will reboot ==="

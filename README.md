@@ -82,7 +82,7 @@ For a full-house roll:
 
 ## Security warning
 
-> **⚠️ IMPORTANT:** Profile values — root password, AP keys, backhaul key, optional SSH public key — are baked into the firmware via OpenWrt's UCI defaults mechanism. Anyone with access to a built `.bin` effectively has those secrets. Treat `output/` as sensitive and **never commit `profiles/*.conf`** (the included `.gitignore` already excludes them).
+> **IMPORTANT:** Profile values — root password, AP keys, backhaul key, optional SSH public key — are baked into the firmware via OpenWrt's UCI defaults mechanism. Anyone with access to a built `.bin` effectively has those secrets. Treat `output/` as sensitive and **never commit `profiles/*.conf`** (the included `.gitignore` already excludes them).
 >
 > The example configs ship with placeholder values like `changeme` — **change every one of them** before flashing anything you care about.
 
