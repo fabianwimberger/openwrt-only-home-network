@@ -43,6 +43,8 @@ for profile in "${PROFILES[@]}"; do
 
         echo "--- DEPLOY ---" | tee -a "$log"
         # shellcheck source=/dev/null
+        [[ ! -f "$PROFILES_DIR/common.conf" ]] && echo "Error: $PROFILES_DIR/common.conf not found" >&2 && exit 1
+        [[ ! -f "$PROFILES_DIR/${profile}.conf" ]] && echo "Error: $PROFILES_DIR/${profile}.conf not found" >&2 && exit 1
         source "$PROFILES_DIR/common.conf"
         # shellcheck source=/dev/null
         source "$PROFILES_DIR/${profile}.conf"
