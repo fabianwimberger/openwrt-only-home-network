@@ -193,26 +193,18 @@ cat "$TMPDIR/files/etc/uci-defaults/99-device-setup"
 echo ""
 echo "------------------------------------"
 
-DOCKER_TAG="openwrt-imagebuilder:${OPENWRT_VERSION}-$(echo "$OPENWRT_TARGET" | tr '/' '-')"
-
-echo "=== Building Docker image ($DOCKER_TAG) ==="
-docker build \
-    --build-arg "OPENWRT_VERSION=$OPENWRT_VERSION" \
-    --build-arg "OPENWRT_TARGET=$OPENWRT_TARGET" \
-    -t "$DOCKER_TAG" \
-    --pull \
-    "$SCRIPT_DIR"
-
-OUTPUT_DIR="$SCRIPT_DIR/output/$PROFILE_NAME"
-mkdir -p "$OUTPUT_DIR"
+DOCKER_TAG="openwrt/imagebuilder:$(echo "$OPENWRT_TARGET" | tr '/' '-')-${OPENWRT_VERSION}"
 
 echo "=== Running ImageBuilder ==="
+OUTPUT_DIR="$SCRIPT_DIR/output/$PROFILE_NAME"
+mkdir -p "$OUTPUT_DIR"
 docker run --rm \
     -u "$(id -u):$(id -g)" \
     -v "$TMPDIR/files:/builder/custom-files" \
     -v "$OUTPUT_DIR:/output" \
+    --entrypoint /bin/sh \
     "$DOCKER_TAG" \
-    "make image PROFILE='$OPENWRT_PROFILE' PACKAGES='$PACKAGES' FILES='/builder/custom-files' BIN_DIR='/output'"
+    -c "make image PROFILE='$OPENWRT_PROFILE' PACKAGES='$PACKAGES' FILES='/builder/custom-files' BIN_DIR='/output'"
 
 echo ""
 echo "=== Build complete ==="

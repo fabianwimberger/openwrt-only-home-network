@@ -41,7 +41,7 @@ if [[ -z "$FIRMWARE" ]]; then
 fi
 
 FIRMWARE_NAME="$(basename "$FIRMWARE")"
-SSH_OPTS=(-o StrictHostKeyChecking=accept-new)
+SSH_OPTS=(-F /dev/null -o StrictHostKeyChecking=accept-new)
 
 echo "=== Deploying to $DEVICE_IP ==="
 echo "    Firmware: $FIRMWARE_NAME"

@@ -56,7 +56,7 @@ for profile in "${PROFILES[@]}"; do
             exit 1
         fi
         FIRMWARE_NAME="$(basename "$FIRMWARE")"
-        SSH_OPTS=(-o StrictHostKeyChecking=accept-new)
+        SSH_OPTS=(-F /dev/null -o StrictHostKeyChecking=accept-new)
 
         echo "Uploading $FIRMWARE_NAME to $DEVICE_IP ..." | tee -a "$log"
         SSHPASS="$ROOT_PASSWORD" timeout 120 sshpass -e scp -O "${SSH_OPTS[@]}" "$FIRMWARE" "root@${DEVICE_IP}:/tmp/${FIRMWARE_NAME}" 2>&1 | tee -a "$log"
