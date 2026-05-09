@@ -18,6 +18,14 @@ usage() {
     exit 1
 }
 
+shell_single_quote_content() {
+    printf "%s" "$1" | sed "s/'/'\\\\''/g"
+}
+
+shell_quote() {
+    printf "'%s'" "$(shell_single_quote_content "$1")"
+}
+
 [[ $# -lt 1 ]] && usage
 
 PROFILE_NAME="$1"
@@ -63,10 +71,10 @@ if [[ "${AP_IOT_ENABLED:-0}" == "1" ]]; then
 uci set wireless.iot.device='radio0'
 uci set wireless.iot.mode='ap'
 uci set wireless.iot.network='lan'
-uci set wireless.iot.ssid='${AP_IOT_SSID}'
+uci set wireless.iot.ssid=$(shell_quote "$AP_IOT_SSID")
 uci set wireless.iot.encryption='psk2'
 uci set wireless.iot.wpa_pairwise='CCMP'
-uci set wireless.iot.key='${AP_IOT_KEY}'
+uci set wireless.iot.key=$(shell_quote "$AP_IOT_KEY")
 uci set wireless.iot.ieee80211w='1'"
 fi
 
@@ -77,9 +85,9 @@ if [[ "${BACKHAUL_AP_24_ENABLED:-0}" == "1" ]]; then
 uci set wireless.bh0.device='radio0'
 uci set wireless.bh0.mode='ap'
 uci set wireless.bh0.network='lan'
-uci set wireless.bh0.ssid='${BACKHAUL_SSID}'
+uci set wireless.bh0.ssid=$(shell_quote "$BACKHAUL_SSID")
 uci set wireless.bh0.encryption='psk2'
-uci set wireless.bh0.key='${BACKHAUL_KEY}'
+uci set wireless.bh0.key=$(shell_quote "$BACKHAUL_KEY")
 uci set wireless.bh0.hidden='1'
 uci set wireless.bh0.wds='1'
 uci set wireless.bh0.isolate='0'"
@@ -92,9 +100,9 @@ if [[ "${BACKHAUL_AP_5_ENABLED:-0}" == "1" ]]; then
 uci set wireless.bh1.device='radio1'
 uci set wireless.bh1.mode='ap'
 uci set wireless.bh1.network='lan'
-uci set wireless.bh1.ssid='${BACKHAUL_SSID}'
+uci set wireless.bh1.ssid=$(shell_quote "$BACKHAUL_SSID")
 uci set wireless.bh1.encryption='psk2'
-uci set wireless.bh1.key='${BACKHAUL_KEY}'
+uci set wireless.bh1.key=$(shell_quote "$BACKHAUL_KEY")
 uci set wireless.bh1.hidden='1'
 uci set wireless.bh1.wds='1'
 uci set wireless.bh1.isolate='0'"
@@ -104,11 +112,27 @@ fi
 SSH_BLOCK="# (no SSH key configured)"
 if [[ -n "${SSH_PUBKEY:-}" ]]; then
     SSH_BLOCK="mkdir -p /etc/dropbear
-cat > /etc/dropbear/authorized_keys <<'SSHEOF'
-${SSH_PUBKEY}
-SSHEOF
+printf '%s\n' $(shell_quote "$SSH_PUBKEY") > /etc/dropbear/authorized_keys
 chmod 600 /etc/dropbear/authorized_keys"
 fi
+
+DEVICE_IP="$(shell_single_quote_content "$DEVICE_IP")"
+NODE_NAME="$(shell_single_quote_content "$NODE_NAME")"
+ROOT_PASSWORD="$(shell_single_quote_content "$ROOT_PASSWORD")"
+LAN_GATEWAY="$(shell_single_quote_content "$LAN_GATEWAY")"
+LAN_DNS="$(shell_single_quote_content "$LAN_DNS")"
+TIMEZONE="$(shell_single_quote_content "$TIMEZONE")"
+ZONENAME="$(shell_single_quote_content "$ZONENAME")"
+RADIO0_COUNTRY="$(shell_single_quote_content "$RADIO0_COUNTRY")"
+RADIO0_CHANNEL="$(shell_single_quote_content "$RADIO0_CHANNEL")"
+RADIO0_HTMODE="$(shell_single_quote_content "$RADIO0_HTMODE")"
+RADIO1_COUNTRY="$(shell_single_quote_content "$RADIO1_COUNTRY")"
+RADIO1_CHANNEL="$(shell_single_quote_content "$RADIO1_CHANNEL")"
+RADIO1_HTMODE="$(shell_single_quote_content "$RADIO1_HTMODE")"
+AP_SSID="$(shell_single_quote_content "$AP_SSID")"
+AP_KEY="$(shell_single_quote_content "$AP_KEY")"
+AP_FT_ENABLED="$(shell_single_quote_content "$AP_FT_ENABLED")"
+MOBILITY_DOMAIN="$(shell_single_quote_content "$MOBILITY_DOMAIN")"
 
 export DEVICE_IP NODE_NAME ROOT_PASSWORD
 export LAN_GATEWAY LAN_DNS TIMEZONE ZONENAME

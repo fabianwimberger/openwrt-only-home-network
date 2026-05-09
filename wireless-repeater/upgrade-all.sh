@@ -50,14 +50,18 @@ for profile in "${PROFILES[@]}"; do
 
         OUTPUT_DIR="$SCRIPT_DIR/output/$profile"
         FIRMWARE=$(find "$OUTPUT_DIR" -name '*-sysupgrade.bin' -type f | head -1)
+        if [[ -z "$FIRMWARE" ]]; then
+            echo "Error: no sysupgrade firmware found in $OUTPUT_DIR" >&2
+            exit 1
+        fi
         FIRMWARE_NAME="$(basename "$FIRMWARE")"
-        SSH_OPTS="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
+        SSH_OPTS=(-o StrictHostKeyChecking=accept-new)
 
         echo "Uploading $FIRMWARE_NAME to $DEVICE_IP ..." | tee -a "$log"
-        timeout 30 sshpass -p "$ROOT_PASSWORD" scp -O $SSH_OPTS "$FIRMWARE" "root@${DEVICE_IP}:/tmp/${FIRMWARE_NAME}" 2>&1 | tee -a "$log"
+        SSHPASS="$ROOT_PASSWORD" timeout 120 sshpass -e scp -O "${SSH_OPTS[@]}" "$FIRMWARE" "root@${DEVICE_IP}:/tmp/${FIRMWARE_NAME}" 2>&1 | tee -a "$log"
 
         echo "Running sysupgrade on $DEVICE_IP ..." | tee -a "$log"
-        timeout 30 sshpass -p "$ROOT_PASSWORD" ssh $SSH_OPTS "root@${DEVICE_IP}" "sysupgrade -n /tmp/${FIRMWARE_NAME}" 2>&1 | tee -a "$log" || true
+        SSHPASS="$ROOT_PASSWORD" timeout 120 sshpass -e ssh "${SSH_OPTS[@]}" "root@${DEVICE_IP}" "sysupgrade -n /tmp/${FIRMWARE_NAME}" 2>&1 | tee -a "$log" || true
 
         echo "Waiting for $DEVICE_IP to come back online ..." | tee -a "$log"
         until ping -c1 -W5 -q "$DEVICE_IP" &>/dev/null; do sleep 5; done
