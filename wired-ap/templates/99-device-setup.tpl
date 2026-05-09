@@ -107,5 +107,4 @@ ${SSH_BLOCK}
 uci commit network
 uci commit wireless
 
-rm -f "$0"
 exit 0
