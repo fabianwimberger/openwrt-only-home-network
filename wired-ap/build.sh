@@ -144,12 +144,6 @@ export AP_IOT_BLOCK BACKHAUL_24_BLOCK BACKHAUL_5_BLOCK SSH_BLOCK
 envsubst < "$TEMPLATES_DIR/99-device-setup.tpl" > "$TMPDIR/files/etc/uci-defaults/99-device-setup"
 chmod +x "$TMPDIR/files/etc/uci-defaults/99-device-setup"
 
-echo ""
-echo "--- Rendered UCI defaults script ---"
-cat "$TMPDIR/files/etc/uci-defaults/99-device-setup"
-echo ""
-echo "------------------------------------"
-
 DOCKER_TAG="openwrt/imagebuilder:$(echo "$OPENWRT_TARGET" | tr '/' '-')-${OPENWRT_VERSION}"
 
 echo "=== Running ImageBuilder ==="
