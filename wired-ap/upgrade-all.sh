@@ -50,9 +50,9 @@ for profile in "${PROFILES[@]}"; do
         source "$PROFILES_DIR/${profile}.conf"
 
         OUTPUT_DIR="$SCRIPT_DIR/output/$profile"
-        FIRMWARE=$(find "$OUTPUT_DIR" -name '*-sysupgrade.bin' -type f | head -1)
+        FIRMWARE=$(find "$OUTPUT_DIR" -name "openwrt-${OPENWRT_VERSION}-*-sysupgrade.bin" -type f | sort | head -1)
         if [[ -z "$FIRMWARE" ]]; then
-            echo "Error: no sysupgrade firmware found in $OUTPUT_DIR" >&2
+            echo "Error: no OpenWrt $OPENWRT_VERSION sysupgrade firmware found in $OUTPUT_DIR" >&2
             exit 1
         fi
         FIRMWARE_NAME="$(basename "$FIRMWARE")"
