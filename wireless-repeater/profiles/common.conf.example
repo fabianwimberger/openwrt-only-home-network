@@ -1,7 +1,7 @@
 # Common settings shared by every wireless-repeater profile.
 # Copy this file to common.conf and edit. The real common.conf is gitignored.
 
-OPENWRT_VERSION="25.12.4"
+OPENWRT_VERSION="25.12.5"
 OPENWRT_TARGET="mediatek/filogic"
 OPENWRT_PROFILE="cudy_re3000-v1"
 

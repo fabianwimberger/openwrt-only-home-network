@@ -2,7 +2,7 @@
 # Copy this file to common.conf and edit. The real common.conf is gitignored.
 
 # OpenWrt ImageBuilder version. Match a release that supports your device.
-OPENWRT_VERSION="25.12.4"
+OPENWRT_VERSION="25.12.5"
 
 # Target and profile — find at https://downloads.openwrt.org/releases/<version>/targets/
 OPENWRT_TARGET="mediatek/filogic"
