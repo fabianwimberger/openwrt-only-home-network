@@ -101,6 +101,10 @@ uci commit usteer
 uci set prometheus-node-exporter-lua.main.listen_interface='lan'
 uci commit prometheus-node-exporter-lua
 
+# === Disable default uhttpd listener (no LuCI installed; exporter runs its own instance) ===
+uci -q delete uhttpd.main
+uci commit uhttpd
+
 # === Root password (+ optional SSH key) ===
 (echo '${ROOT_PASSWORD}'; echo '${ROOT_PASSWORD}') | passwd root
 ${SSH_BLOCK}
