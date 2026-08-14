@@ -139,9 +139,11 @@ uci set usteer.@usteer[0].ipv6='0'
 uci set usteer.@usteer[0].syslog='1'
 uci -q delete usteer.@usteer[0].ssid_list
 uci add_list usteer.@usteer[0].ssid_list=$(shell_quote "$AP_SSID")
-uci set usteer.@usteer[0].assoc_steering='1'
+uci set usteer.@usteer[0].assoc_steering='0'
 uci set usteer.@usteer[0].roam_scan_snr='-65'
-uci set usteer.@usteer[0].signal_diff_threshold='8'
+uci set usteer.@usteer[0].signal_diff_threshold='10'
+uci set usteer.@usteer[0].seen_policy_timeout='15000'
+uci set usteer.@usteer[0].band_steering_interval='0'
 uci commit usteer"
 fi
 

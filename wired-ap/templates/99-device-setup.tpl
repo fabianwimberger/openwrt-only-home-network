@@ -91,14 +91,20 @@ uci set usteer.@usteer[0].ipv6='0'
 uci set usteer.@usteer[0].syslog='1'
 uci -q delete usteer.@usteer[0].ssid_list
 uci add_list usteer.@usteer[0].ssid_list='${AP_SSID}'
-uci set usteer.@usteer[0].assoc_steering='1'
+uci set usteer.@usteer[0].assoc_steering='0'
 uci set usteer.@usteer[0].roam_scan_snr='-65'
-uci set usteer.@usteer[0].signal_diff_threshold='8'
+uci set usteer.@usteer[0].signal_diff_threshold='10'
+uci set usteer.@usteer[0].seen_policy_timeout='15000'
+uci set usteer.@usteer[0].band_steering_interval='0'
 uci commit usteer
 
 # === Prometheus exporter — bind to lan, not loopback ===
 uci set prometheus-node-exporter-lua.main.listen_interface='lan'
 uci commit prometheus-node-exporter-lua
+
+# === Disable default uhttpd listener (no LuCI installed; exporter runs its own instance) ===
+uci -q delete uhttpd.main
+uci commit uhttpd
 
 # === Root password (+ optional SSH key) ===
 (echo '${ROOT_PASSWORD}'; echo '${ROOT_PASSWORD}') | passwd root
