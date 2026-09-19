@@ -48,10 +48,12 @@ if [[ -z "${MOBILITY_DOMAIN:-}" ]]; then
     exit 1
 fi
 
-for var_name in ROOT_PASSWORD BACKHAUL_KEY; do
+# Reject the example placeholder keys so firmware can never ship with a known
+# default root or WiFi password.
+for var_name in ROOT_PASSWORD BACKHAUL_KEY AP_KEY AP_IOT_KEY AP_LOCAL_KEY BACKHAUL_AP_KEY; do
     val="${!var_name:-}"
-    if [[ "$val" == "changeme" || "$val" == "changeme-backhaul" || "$val" == "changeme-main" || "$val" == "changeme-iot" ]]; then
-        echo "Error: $var_name is set to a default placeholder '$val'. Set a real value."
+    if [[ "$val" == changeme* ]]; then
+        echo "Error: $var_name is still the example placeholder '$val'. Set a real value."
         exit 1
     fi
 done

@@ -53,7 +53,7 @@ flowchart LR
 | [`wired-ap/`](wired-ap/) | Wired access points — main roaming SSID + WDS backhaul + `usteer` |
 | [`wireless-repeater/`](wireless-repeater/) | Wireless repeaters — 4-addr STA backhaul + optional local SSID |
 
-Each tier is a self-contained ImageBuilder project: `Dockerfile`, `build.sh`, `deploy.sh`, `upgrade-all.sh`, plus `profiles/` and `templates/`. The two tiers don't share scripts — keeping them independent makes each easier to read and lint.
+Each tier is a self-contained ImageBuilder project: `build.sh`, `deploy.sh`, `upgrade-all.sh`, plus `profiles/` and `templates/`. Firmware is built with the official `openwrt/imagebuilder` container, so there is no per-tier Dockerfile. The two tiers don't share scripts — keeping them independent makes each easier to read and lint.
 
 ## Quick Start
 
@@ -79,6 +79,21 @@ For a full-house roll:
 ./upgrade-all.sh                 # builds + deploys every profile in parallel
 ./upgrade-all.sh ap-main         # or restrict to specific profile(s)
 ```
+
+## Configuration reference
+
+Common values live in `profiles/common.conf`; per-node values live in each profile `.conf`. Every key is documented inline in the shipped `.conf.example` files. The common ones:
+
+| Variable | Purpose |
+|----------|---------|
+| `OPENWRT_VERSION`, `OPENWRT_TARGET`, `OPENWRT_PROFILE` | ImageBuilder release and device target/profile |
+| `ROOT_PASSWORD` | Firmware root password (baked in — treat as a secret) |
+| `SSH_PUBKEY` | Optional authorized key for passwordless SSH |
+| `LAN_GATEWAY`, `LAN_DNS` | Upstream router and resolver |
+| `TIMEZONE`, `ZONENAME` | POSIX `TZ` string and zoneinfo name |
+| `BACKHAUL_SSID`, `BACKHAUL_KEY` | Hidden WDS backhaul network and its key |
+| `MOBILITY_DOMAIN` | 4-hex 802.11r mobility domain, shared by every AP |
+| `PACKAGES` | ImageBuilder package list |
 
 ## Security warning
 
