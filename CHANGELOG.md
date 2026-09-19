@@ -5,6 +5,26 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v1.2.6] - 2026-09-19
+
+Rejects example placeholder keys at build time, tightens shellcheck, and documents the tier layout.
+
+### Fixes
+
+- Reject every example placeholder key at build time, so a profile copied from the examples cannot be flashed with credentials still set to their placeholder values
+
+### CI
+
+- Run shellcheck at warning severity and assert the scripts' usage output
+
+### Documentation
+
+- Correct the tier layout and add a configuration reference to the README
+
+### Documentation & Links
+
+- [README](https://github.com/fabianwimberger/openwrt-only-home-network#readme)
+
 ## [v1.2.5] - 2026-08-14
 
 Client roaming no longer flaps between APs, and the unused uhttpd listener is disabled.
