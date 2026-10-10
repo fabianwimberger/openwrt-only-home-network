@@ -9,32 +9,6 @@ A buildable, profile-driven blueprint for a whole-home WiFi network on OpenWrt �
 
 Off-the-shelf "mesh" systems work, but they lock you into a vendor cloud and hide the knobs you actually want. OpenWrt has all the building blocks — `wpad`, 802.11r FT, 4-address WDS, `usteer` — but stitching them into something that roams cleanly *and* survives a marginal-signal repeater takes some thought. This repo is that stitched-together design, expressed as ImageBuilder profiles you can flash.
 
-## Architecture
-
-```mermaid
-flowchart LR
-    upstream[Upstream Router<br/>DHCP / DNS / L3]
-
-    subgraph Wired ["Wired APs"]
-        apmain[ap-main<br/>roaming + backhaul]
-        apupper[ap-upper<br/>roaming + anchor backhaul]
-    end
-
-    subgraph Wireless ["Wireless Repeaters"]
-        riot[repeater-iot]
-        ranchor[repeater-anchor]
-    end
-
-    upstream --> apmain
-    upstream --> apupper
-    apmain ---|802.11r FT| apupper
-    apmain -.->|WDS 4-addr| riot
-    apupper -.->|WDS 4-addr| ranchor
-```
-
-- **Wired APs** sit on the LAN, join `br-lan`, and broadcast the main roaming SSID with 802.11r fast-transition. They also host a hidden WDS access point on a dedicated backhaul SSID. `usteer` runs here for assoc-time client steering.
-- **Wireless repeaters** join the backhaul as 4-address STAs, becoming L2-transparent extensions of `br-lan`. They can optionally advertise their own site-specific SSIDs (no FT, no `usteer`) for short-range / IoT clients that don't need to roam.
-
 ## Features
 
 - **WDS / 4-address backhaul** — fully L2-transparent, no `batman-adv`, no `relayd`
@@ -53,7 +27,7 @@ flowchart LR
 | [`wired-ap/`](wired-ap/) | Wired access points — main roaming SSID + WDS backhaul + `usteer` |
 | [`wireless-repeater/`](wireless-repeater/) | Wireless repeaters — 4-addr STA backhaul + optional local SSID |
 
-Each tier is a self-contained ImageBuilder project: `build.sh`, `deploy.sh`, `upgrade-all.sh`, plus `profiles/` and `templates/`. Firmware is built with the official `openwrt/imagebuilder` container, so there is no per-tier Dockerfile. The two tiers don't share scripts — keeping them independent makes each easier to read and lint.
+Each tier is a self-contained ImageBuilder project: `build.sh`, `deploy.sh`, `upgrade-all.sh`, plus `profiles/` and `templates/`. Firmware is built with the official `openwrt/imagebuilder` container, so there is no per-tier Dockerfile. The two tiers share no scripts.
 
 ## Quick Start
 
@@ -79,6 +53,32 @@ For a full-house roll:
 ./upgrade-all.sh                 # builds + deploys every profile in parallel
 ./upgrade-all.sh ap-main         # or restrict to specific profile(s)
 ```
+
+## How It Works
+
+```mermaid
+flowchart LR
+    upstream[Upstream Router<br/>DHCP / DNS / L3]
+
+    subgraph Wired ["Wired APs"]
+        apmain[ap-main<br/>roaming + backhaul]
+        apupper[ap-upper<br/>roaming + anchor backhaul]
+    end
+
+    subgraph Wireless ["Wireless Repeaters"]
+        riot[repeater-iot]
+        ranchor[repeater-anchor]
+    end
+
+    upstream --> apmain
+    upstream --> apupper
+    apmain ---|802.11r FT| apupper
+    apmain -.->|WDS 4-addr| riot
+    apupper -.->|WDS 4-addr| ranchor
+```
+
+- **Wired APs** sit on the LAN, join `br-lan`, and broadcast the main roaming SSID with 802.11r fast-transition. They also host a hidden WDS access point on a dedicated backhaul SSID. `usteer` runs here for assoc-time client steering.
+- **Wireless repeaters** join the backhaul as 4-address STAs, becoming L2-transparent extensions of `br-lan`. They can optionally advertise their own site-specific SSIDs (no FT, no `usteer`) for short-range / IoT clients that don't need to roam.
 
 ## Configuration reference
 
