@@ -27,7 +27,7 @@ Off-the-shelf "mesh" systems work, but they lock you into a vendor cloud and hid
 | [`wired-ap/`](wired-ap/) | Wired access points — main roaming SSID + WDS backhaul + `usteer` |
 | [`wireless-repeater/`](wireless-repeater/) | Wireless repeaters — 4-addr STA backhaul + optional local SSID |
 
-Each tier is a self-contained ImageBuilder project: `build.sh`, `deploy.sh`, `upgrade-all.sh`, plus `profiles/` and `templates/`. Firmware is built with the official `openwrt/imagebuilder` container, so there is no per-tier Dockerfile. The two tiers don't share scripts — keeping them independent makes each easier to read and lint.
+Each tier is a self-contained ImageBuilder project: `build.sh`, `deploy.sh`, `upgrade-all.sh`, plus `profiles/` and `templates/`. Firmware is built with the official `openwrt/imagebuilder` container, so there is no per-tier Dockerfile. The two tiers share no scripts.
 
 ## Quick Start
 
