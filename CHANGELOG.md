@@ -5,6 +5,30 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v1.3.0] - 2026-10-17
+
+Client steering is rebuilt around band steering with a signal guard plus a roam kick, repeaters can serve the roaming SSID on more than one radio, and a new service re-checks usteer's tracked BSSes after boot. Nightly images are supported.
+
+### Features
+
+- Add `usteer-recheck`: restarts `usteer` when it tracks fewer roaming BSSes than are up, so a radio that was not up when `usteer` started is not left unsteered
+- Let a repeater serve the roaming SSID on more than one radio via `AP_DEVICES` / `AP_IOT_DEVICES`
+- Support nightly OpenWrt images: match version-less sysupgrade filenames and pull the ImageBuilder container before each build
+
+### Fixes
+
+- Re-enable `usteer` band steering, now guarded by `band_steering_min_snr` so far-away and 2.4 GHz-only clients are left alone
+- Turn on PMF, DTIM and WNM sleep mode on the roaming and IoT SSIDs
+- Keep `usteer` and the re-check off on repeaters outside the roaming domain instead of running them with a default config
+
+### Documentation
+
+- Correct the README steering description and document the repeater radio lists and nightly builds
+
+### Documentation & Links
+
+- [README](https://github.com/fabianwimberger/openwrt-only-home-network#readme)
+
 ## [v1.2.6] - 2026-09-19
 
 Rejects example placeholder keys at build time, tightens shellcheck, and documents the tier layout.

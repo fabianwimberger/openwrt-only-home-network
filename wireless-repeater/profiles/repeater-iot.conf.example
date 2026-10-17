@@ -24,6 +24,13 @@ BACKHAUL_DEVICE="radio1"
 AP_ENABLED="0"
 AP_IOT_ENABLED="0"
 
+# To serve the roaming SSID from this repeater instead: set AP_ENABLED=1 and list
+# the radio(s) in AP_DEVICES (space separated), with AP_SSID, AP_KEY and
+# MOBILITY_DOMAIN matching the wired APs. usteer and the re-check then run here
+# too. AP_IOT_DEVICES does the same for the IoT SSID.
+# AP_DEVICES="radio0"
+# AP_IOT_DEVICES=""
+
 # Site-specific SSID (no FT, no usteer).
 AP_LOCAL_ENABLED="1"
 AP_LOCAL_DEVICE="radio0"

@@ -66,39 +66,67 @@ if [[ -d "$SCRIPT_DIR/files" ]]; then
     cp -a "$SCRIPT_DIR/files/"* "$TMPDIR/files/" 2>/dev/null || true
 fi
 
-# Main roaming SSID block (WPA2-Personal + 802.11r FT-PSK)
+# Main roaming SSID block (WPA2-Personal + 802.11r FT-PSK).
+# AP_DEVICES lists the radios that serve it (space separated, one wifi-iface
+# per radio, like the wired APs do on both bands).
 AP_BLOCK=""
 if [[ "${AP_ENABLED:-0}" == "1" ]]; then
-    AP_BLOCK="uci set wireless.default_ap=wifi-iface
-uci set wireless.default_ap.device=$(shell_quote "$AP_DEVICE")
-uci set wireless.default_ap.network='lan'
-uci set wireless.default_ap.mode='ap'
-uci set wireless.default_ap.ssid=$(shell_quote "$AP_SSID")
-uci set wireless.default_ap.encryption='psk2'
-uci set wireless.default_ap.wpa_pairwise='CCMP'
-uci set wireless.default_ap.key=$(shell_quote "$AP_KEY")
-uci set wireless.default_ap.ieee80211k='1'
-uci set wireless.default_ap.ieee80211v='1'
-uci set wireless.default_ap.bss_transition='1'
-uci set wireless.default_ap.ieee80211r=$(shell_quote "${AP_FT_ENABLED:-1}")
-uci set wireless.default_ap.ft_over_ds='0'
-uci set wireless.default_ap.ft_psk_generate_local='1'
-uci set wireless.default_ap.pmk_r1_push='1'
-uci set wireless.default_ap.mobility_domain=$(shell_quote "$MOBILITY_DOMAIN")"
+    if [[ -z "${AP_DEVICES:-}" ]]; then
+        echo "Error: AP_ENABLED=1 but AP_DEVICES is empty. Set the radio(s) that serve '$AP_SSID'."
+        exit 1
+    fi
+    ap_n=0
+    for ap_dev in $AP_DEVICES; do
+        ap_n=$((ap_n + 1))
+        ap_iface="default_ap"
+        [[ "$ap_n" -gt 1 ]] && ap_iface="default_ap${ap_n}"
+        AP_BLOCK+="uci set wireless.${ap_iface}=wifi-iface
+uci set wireless.${ap_iface}.device=$(shell_quote "$ap_dev")
+uci set wireless.${ap_iface}.network='lan'
+uci set wireless.${ap_iface}.mode='ap'
+uci set wireless.${ap_iface}.ssid=$(shell_quote "$AP_SSID")
+uci set wireless.${ap_iface}.encryption='psk2'
+uci set wireless.${ap_iface}.wpa_pairwise='CCMP'
+uci set wireless.${ap_iface}.key=$(shell_quote "$AP_KEY")
+uci set wireless.${ap_iface}.ieee80211w='1'
+uci set wireless.${ap_iface}.dtim_period='3'
+uci set wireless.${ap_iface}.wnm_sleep_mode='1'
+uci set wireless.${ap_iface}.ieee80211k='1'
+uci set wireless.${ap_iface}.ieee80211v='1'
+uci set wireless.${ap_iface}.bss_transition='1'
+uci set wireless.${ap_iface}.ieee80211r=$(shell_quote "${AP_FT_ENABLED:-1}")
+uci set wireless.${ap_iface}.ft_over_ds='0'
+uci set wireless.${ap_iface}.ft_psk_generate_local='1'
+uci set wireless.${ap_iface}.pmk_r1_push='1'
+uci set wireless.${ap_iface}.mobility_domain=$(shell_quote "$MOBILITY_DOMAIN")
+"
+    done
 fi
 
 # IoT SSID block (no FT, PMF on)
+# AP_IOT_DEVICES is a space separated radio list, same as AP_DEVICES.
 AP_IOT_BLOCK=""
 if [[ "${AP_IOT_ENABLED:-0}" == "1" ]]; then
-    AP_IOT_BLOCK="uci set wireless.iot_ap=wifi-iface
-uci set wireless.iot_ap.device=$(shell_quote "$AP_IOT_DEVICE")
-uci set wireless.iot_ap.network='lan'
-uci set wireless.iot_ap.mode='ap'
-uci set wireless.iot_ap.ssid=$(shell_quote "$AP_IOT_SSID")
-uci set wireless.iot_ap.encryption='psk2'
-uci set wireless.iot_ap.wpa_pairwise='CCMP'
-uci set wireless.iot_ap.key=$(shell_quote "$AP_IOT_KEY")
-uci set wireless.iot_ap.ieee80211w='1'"
+    if [[ -z "${AP_IOT_DEVICES:-}" ]]; then
+        echo "Error: AP_IOT_ENABLED=1 but AP_IOT_DEVICES is empty. Set the radio(s) that serve '$AP_IOT_SSID'."
+        exit 1
+    fi
+    iot_n=0
+    for iot_dev in $AP_IOT_DEVICES; do
+        iot_n=$((iot_n + 1))
+        iot_iface="iot_ap"
+        [[ "$iot_n" -gt 1 ]] && iot_iface="iot_ap${iot_n}"
+        AP_IOT_BLOCK+="uci set wireless.${iot_iface}=wifi-iface
+uci set wireless.${iot_iface}.device=$(shell_quote "$iot_dev")
+uci set wireless.${iot_iface}.network='lan'
+uci set wireless.${iot_iface}.mode='ap'
+uci set wireless.${iot_iface}.ssid=$(shell_quote "$AP_IOT_SSID")
+uci set wireless.${iot_iface}.encryption='psk2'
+uci set wireless.${iot_iface}.wpa_pairwise='CCMP'
+uci set wireless.${iot_iface}.key=$(shell_quote "$AP_IOT_KEY")
+uci set wireless.${iot_iface}.ieee80211w='1'
+"
+    done
 fi
 
 # Downstream WDS-AP block — daisy-chain another repeater through this one.
@@ -129,24 +157,32 @@ uci set wireless.local_ap.mode='ap'
 uci set wireless.local_ap.ssid=$(shell_quote "$AP_LOCAL_SSID")
 uci set wireless.local_ap.encryption='psk2'
 uci set wireless.local_ap.wpa_pairwise='CCMP'
-uci set wireless.local_ap.key=$(shell_quote "$AP_LOCAL_KEY")"
+uci set wireless.local_ap.key=$(shell_quote "$AP_LOCAL_KEY")
+uci set wireless.local_ap.ieee80211w='1'"
 fi
 
 # usteer only on nodes that participate in the roaming domain.
-USTEER_BLOCK="# (usteer disabled — repeater is not in the roaming domain)"
+# Elsewhere the service is switched off: with its default config it would still
+# broadcast node sync to the LAN once per second.
+USTEER_BLOCK="/etc/init.d/usteer disable
+/etc/init.d/usteer-recheck disable"
 if [[ "${AP_ENABLED:-0}" == "1" ]]; then
     USTEER_BLOCK="uci set usteer.@usteer[0].network='lan'
 uci set usteer.@usteer[0].local_mode='0'
 uci set usteer.@usteer[0].ipv6='0'
 uci set usteer.@usteer[0].syslog='1'
+uci set usteer.@usteer[0].debug_level='2'
 uci -q delete usteer.@usteer[0].ssid_list
 uci add_list usteer.@usteer[0].ssid_list=$(shell_quote "$AP_SSID")
 uci set usteer.@usteer[0].assoc_steering='0'
 uci set usteer.@usteer[0].roam_scan_snr='-65'
 uci set usteer.@usteer[0].signal_diff_threshold='10'
 uci set usteer.@usteer[0].seen_policy_timeout='15000'
-uci set usteer.@usteer[0].band_steering_interval='0'
-uci commit usteer"
+uci set usteer.@usteer[0].band_steering_min_snr='-60'
+uci set usteer.@usteer[0].aggressiveness='2'
+uci set usteer.@usteer[0].remote_update_interval='5000'
+uci commit usteer
+/etc/init.d/usteer-recheck enable"
 fi
 
 # radio1 settings only if not disabled
@@ -194,6 +230,8 @@ chmod +x "$TMPDIR/files/etc/uci-defaults/99-device-setup"
 DOCKER_TAG="openwrt/imagebuilder:$(echo "$OPENWRT_TARGET" | tr '/' '-')-${OPENWRT_VERSION}"
 
 echo "=== Running ImageBuilder ==="
+# A locally cached tag would otherwise be reused indefinitely.
+docker pull "$DOCKER_TAG"
 OUTPUT_DIR="$SCRIPT_DIR/output/$PROFILE_NAME"
 mkdir -p "$OUTPUT_DIR"
 docker run --rm \
@@ -202,7 +240,7 @@ docker run --rm \
     -v "$OUTPUT_DIR:/output" \
     --entrypoint /bin/sh \
     "$DOCKER_TAG" \
-    -c "make image PROFILE='$OPENWRT_PROFILE' PACKAGES='$PACKAGES' FILES='/builder/custom-files' BIN_DIR='/output'"
+    -c "{ [ -d ./scripts ] || ./setup.sh; } && make image PROFILE='$OPENWRT_PROFILE' PACKAGES='$PACKAGES' FILES='/builder/custom-files' BIN_DIR='/output'"
 
 echo ""
 echo "=== Build complete ==="
