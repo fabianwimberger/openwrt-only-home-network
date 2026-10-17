@@ -149,6 +149,8 @@ chmod +x "$TMPDIR/files/etc/uci-defaults/99-device-setup"
 DOCKER_TAG="openwrt/imagebuilder:$(echo "$OPENWRT_TARGET" | tr '/' '-')-${OPENWRT_VERSION}"
 
 echo "=== Running ImageBuilder ==="
+# A locally cached tag would otherwise be reused indefinitely.
+docker pull "$DOCKER_TAG"
 OUTPUT_DIR="$SCRIPT_DIR/output/$PROFILE_NAME"
 mkdir -p "$OUTPUT_DIR"
 docker run --rm \
@@ -157,7 +159,7 @@ docker run --rm \
     -v "$OUTPUT_DIR:/output" \
     --entrypoint /bin/sh \
     "$DOCKER_TAG" \
-    -c "make image PROFILE='$OPENWRT_PROFILE' PACKAGES='$PACKAGES' FILES='/builder/custom-files' BIN_DIR='/output'"
+    -c "{ [ -d ./scripts ] || ./setup.sh; } && make image PROFILE='$OPENWRT_PROFILE' PACKAGES='$PACKAGES' FILES='/builder/custom-files' BIN_DIR='/output'"
 
 echo ""
 echo "=== Build complete ==="

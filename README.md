@@ -13,7 +13,7 @@ Off-the-shelf "mesh" systems work, but they lock you into a vendor cloud and hid
 
 - **WDS / 4-address backhaul** — fully L2-transparent, no `batman-adv`, no `relayd`
 - **802.11r FT-PSK** — fast transition between APs that share the mobility domain
-- **`usteer`** — assoc-time client steering on the roaming SSID only
+- **`usteer`** — assoc-time client steering on the roaming SSID only, with a boot-time check that every roaming BSS is actually tracked
 - **Multi-SSID** — separate IoT SSID without FT (some IoT chips mishandle it)
 - **Anchor backhaul** — a marginal-signal repeater can pin to a different AP via a distinct backhaul SSID
 - **Profile-driven** — one `.conf` per node, baked into firmware via UCI defaults
@@ -27,7 +27,7 @@ Off-the-shelf "mesh" systems work, but they lock you into a vendor cloud and hid
 | [`wired-ap/`](wired-ap/) | Wired access points — main roaming SSID + WDS backhaul + `usteer` |
 | [`wireless-repeater/`](wireless-repeater/) | Wireless repeaters — 4-addr STA backhaul + optional local SSID |
 
-Each tier is a self-contained ImageBuilder project: `build.sh`, `deploy.sh`, `upgrade-all.sh`, plus `profiles/` and `templates/`. Firmware is built with the official `openwrt/imagebuilder` container, so there is no per-tier Dockerfile. The two tiers share no scripts.
+Each tier is a self-contained ImageBuilder project: `build.sh`, `deploy.sh`, `upgrade-all.sh`, plus `profiles/`, `templates/` and `files/`. Firmware is built with the official `openwrt/imagebuilder` container, so there is no per-tier Dockerfile. The two tiers share no scripts.
 
 ## Quick Start
 

@@ -1,0 +1,14 @@
+#!/bin/sh /etc/rc.common
+# Keeps usteer's tracked BSSes in sync with the radios — see the script for why.
+# Enabled by 99-device-setup together with usteer itself.
+
+START=99
+STOP=10
+USE_PROCD=1
+
+start_service() {
+    procd_open_instance
+    procd_set_param command /usr/lib/usteer-recheck
+    procd_set_param respawn
+    procd_close_instance
+}

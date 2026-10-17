@@ -50,6 +50,9 @@ uci set wireless.default_radio0.ssid='${AP_SSID}'
 uci set wireless.default_radio0.encryption='psk2'
 uci set wireless.default_radio0.wpa_pairwise='CCMP'
 uci set wireless.default_radio0.key='${AP_KEY}'
+uci set wireless.default_radio0.ieee80211w='1'
+uci set wireless.default_radio0.dtim_period='3'
+uci set wireless.default_radio0.wnm_sleep_mode='1'
 uci set wireless.default_radio0.ieee80211k='1'
 uci set wireless.default_radio0.ieee80211v='1'
 uci set wireless.default_radio0.bss_transition='1'
@@ -68,6 +71,9 @@ uci set wireless.default_radio1.ssid='${AP_SSID}'
 uci set wireless.default_radio1.encryption='psk2'
 uci set wireless.default_radio1.wpa_pairwise='CCMP'
 uci set wireless.default_radio1.key='${AP_KEY}'
+uci set wireless.default_radio1.ieee80211w='1'
+uci set wireless.default_radio1.dtim_period='3'
+uci set wireless.default_radio1.wnm_sleep_mode='1'
 uci set wireless.default_radio1.ieee80211k='1'
 uci set wireless.default_radio1.ieee80211v='1'
 uci set wireless.default_radio1.bss_transition='1'
@@ -84,19 +90,36 @@ ${AP_IOT_BLOCK}
 ${BACKHAUL_24_BLOCK}
 ${BACKHAUL_5_BLOCK}
 
-# === usteer — assoc-time steering on the roaming SSID only ===
+# === usteer — steering on the roaming SSID only ===
 uci set usteer.@usteer[0].network='lan'
 uci set usteer.@usteer[0].local_mode='0'
 uci set usteer.@usteer[0].ipv6='0'
 uci set usteer.@usteer[0].syslog='1'
+# Without this the package default is fatal and the steering decisions are
+# invisible; keep it while the network is being tuned.
+uci set usteer.@usteer[0].debug_level='2'
 uci -q delete usteer.@usteer[0].ssid_list
 uci add_list usteer.@usteer[0].ssid_list='${AP_SSID}'
 uci set usteer.@usteer[0].assoc_steering='0'
+# Recommended values; triggering roam scans earlier is what makes indoor
+# AP-to-AP roaming feel quick.
 uci set usteer.@usteer[0].roam_scan_snr='-65'
 uci set usteer.@usteer[0].signal_diff_threshold='10'
 uci set usteer.@usteer[0].seen_policy_timeout='15000'
-uci set usteer.@usteer[0].band_steering_interval='0'
+# Band steering stays at its package defaults (interval 30000): the min-SNR
+# guard is what leaves far-away and 2.4 GHz-only clients where they are.
+uci set usteer.@usteer[0].band_steering_min_snr='-60'
+# Level 2 = transition request with disassociation imminent, no countdown:
+# clients that honour it move up to 5 GHz, clients that ignore it are dropped
+# 10 s later (kick_time). Level 1 never acts; levels 3+ add a real countdown.
+uci set usteer.@usteer[0].aggressiveness='2'
+# Node sync is a LAN broadcast that wakes every sleeping client.
+uci set usteer.@usteer[0].remote_update_interval='5000'
 uci commit usteer
+
+# usteer reads each BSS's SSID once, so a radio that is not up yet when it
+# starts would stay unsteered until it restarts. This service re-checks.
+/etc/init.d/usteer-recheck enable
 
 # === Prometheus exporter — bind to lan, not loopback ===
 uci set prometheus-node-exporter-lua.main.listen_interface='lan'

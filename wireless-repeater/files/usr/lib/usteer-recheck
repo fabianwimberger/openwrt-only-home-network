@@ -1,0 +1,73 @@
+#!/bin/sh
+#
+# usteer reads a BSS's SSID once — when hostapd announces the interface — and
+# then decides from ssid_list whether to steer on it. A radio that is not up at
+# that moment stays disabled and is never re-checked, so steering can be
+# silently missing on it after a reboot or a `wifi reload`. Seen on a repeater
+# whose 5 GHz BSS comes up only after its backhaul STA associated: usteer read
+# it as ssid= (empty), disabled it, and band steering had no 5 GHz target at all
+# until a manual restart.
+#
+# Compare what usteer tracks with the BSSes that are actually up and restart it
+# when they disagree. Only BSSes whose SSID is in ssid_list are counted — every
+# other BSS is meant to be untracked.
+
+TAG="usteer-recheck"
+INTERVAL=60       # steady-state period
+START_INTERVAL=10
+START_CHECKS=12   # tighter checks for the first two minutes after boot
+
+steer_ssids() {
+    uci -q get usteer.@usteer[0].ssid_list 2>/dev/null
+}
+
+is_steered() {
+    case " $1 " in
+        *" $2 "*) return 0 ;;
+    esac
+    return 1
+}
+
+count_up() {
+    ssids="$(steer_ssids)"
+    n=0
+    for iface in $(ubus list 2>/dev/null | sed -n 's/^hostapd\.//p'); do
+        ssid="$(iw dev "$iface" info 2>/dev/null | sed -n 's/^[[:space:]]*ssid //p')"
+        [ -n "$ssid" ] && is_steered "$ssids" "$ssid" && n=$((n + 1))
+    done
+    echo "$n"
+}
+
+count_tracked() {
+    ssids="$(steer_ssids)"
+    n=0
+    for ssid in $(ubus call usteer local_info 2>/dev/null | sed -n 's/.*"ssid": *"\([^"]*\)".*/\1/p'); do
+        is_steered "$ssids" "$ssid" && n=$((n + 1))
+    done
+    echo "$n"
+}
+
+logger -t "$TAG" "watching usteer for $(steer_ssids)"
+
+i=0
+while :; do
+    up="$(count_up)"
+    tracked="$(count_tracked)"
+    if [ "${up:-0}" -gt 0 ] && [ "${tracked:-0}" -lt "${up:-0}" ]; then
+        logger -t "$TAG" "usteer tracks $tracked of $up steering BSSes, restarting it"
+        /etc/init.d/usteer restart
+        sleep 10
+        up="$(count_up)"
+        tracked="$(count_tracked)"
+        if [ "${tracked:-0}" -lt "${up:-0}" ]; then
+            logger -t "$TAG" "still $tracked of $up after restart, backing off"
+            sleep 300
+        fi
+    fi
+    i=$((i + 1))
+    if [ "$i" -le "$START_CHECKS" ]; then
+        sleep "$START_INTERVAL"
+    else
+        sleep "$INTERVAL"
+    fi
+done

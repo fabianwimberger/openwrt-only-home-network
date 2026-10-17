@@ -32,7 +32,10 @@ source "$COMMON_FILE"
 source "$PROFILE_FILE"
 
 OUTPUT_DIR="$SCRIPT_DIR/output/$PROFILE_NAME"
-FIRMWARE=$(find "$OUTPUT_DIR" -name "openwrt-${OPENWRT_VERSION}-*-sysupgrade.bin" -type f | sort | head -1)
+# Nightly images carry no version in their file name.
+FIRMWARE_VERSION="${OPENWRT_VERSION}-"
+[[ "$OPENWRT_VERSION" == "main" ]] && FIRMWARE_VERSION=""
+FIRMWARE=$(find "$OUTPUT_DIR" -name "openwrt-${FIRMWARE_VERSION}${OPENWRT_TARGET//\//-}-*-sysupgrade.bin" -type f | sort | head -1)
 
 if [[ -z "$FIRMWARE" ]]; then
     echo "Error: no OpenWrt $OPENWRT_VERSION sysupgrade firmware found in $OUTPUT_DIR"
