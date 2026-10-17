@@ -101,20 +101,22 @@ uci set usteer.@usteer[0].debug_level='2'
 uci -q delete usteer.@usteer[0].ssid_list
 uci add_list usteer.@usteer[0].ssid_list='${AP_SSID}'
 uci set usteer.@usteer[0].assoc_steering='0'
-# Recommended values; triggering roam scans earlier is what makes indoor
-# AP-to-AP roaming feel quick.
+# The two settings the OpenWrt wiki recommends: roam scans are never triggered
+# until roam_scan_snr is set, and a non-zero signal_diff_threshold is what
+# enables AP steering at all.
 uci set usteer.@usteer[0].roam_scan_snr='-65'
-uci set usteer.@usteer[0].signal_diff_threshold='10'
-uci set usteer.@usteer[0].seen_policy_timeout='15000'
+uci set usteer.@usteer[0].signal_diff_threshold='8'
+uci set usteer.@usteer[0].seen_policy_timeout='30000'
 # Band steering stays at its package defaults (interval 30000): the min-SNR
 # guard is what leaves far-away and 2.4 GHz-only clients where they are.
 uci set usteer.@usteer[0].band_steering_min_snr='-60'
-# Level 2 = transition request with disassociation imminent, no countdown:
-# clients that honour it move up to 5 GHz, clients that ignore it are dropped
-# 10 s later (kick_time). Level 1 never acts; levels 3+ add a real countdown.
-uci set usteer.@usteer[0].aggressiveness='2'
-# Node sync is a LAN broadcast that wakes every sleeping client.
-uci set usteer.@usteer[0].remote_update_interval='5000'
+# Package default. 3 = transition request with disassociation imminent and a
+# countdown timer in the frame; a client that ignores it is dropped 10 s later
+# (kick_time). Level 1 is the passive level that never kicks anyone.
+uci set usteer.@usteer[0].aggressiveness='3'
+# Package default. Node sync is a LAN broadcast that wakes every sleeping
+# client, so raising it trades steering freshness for fewer wake-ups.
+uci set usteer.@usteer[0].remote_update_interval='1000'
 uci commit usteer
 
 # usteer reads each BSS's SSID once, so a radio that is not up yet when it
