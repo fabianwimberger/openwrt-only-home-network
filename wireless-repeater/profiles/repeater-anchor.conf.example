@@ -21,6 +21,13 @@ BACKHAUL_SSID="MyHome-Backhaul-Upper"
 AP_ENABLED="0"
 AP_IOT_ENABLED="0"
 
+# Serve the roaming SSID here instead of a site-specific one: set AP_ENABLED=1
+# and list the radio(s) in AP_DEVICES (space separated). AP_SSID, AP_KEY and
+# MOBILITY_DOMAIN must match the wired APs, and usteer plus the re-check then
+# run on this node as well. AP_IOT_DEVICES does the same for the IoT SSID.
+# AP_DEVICES="radio0 radio1"
+# AP_IOT_DEVICES="radio0"
+
 AP_LOCAL_ENABLED="1"
 AP_LOCAL_DEVICE="radio0"
 AP_LOCAL_SSID="MyHome-Garden"

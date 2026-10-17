@@ -13,7 +13,7 @@ Off-the-shelf "mesh" systems work, but they lock you into a vendor cloud and hid
 
 - **WDS / 4-address backhaul** — fully L2-transparent, no `batman-adv`, no `relayd`
 - **802.11r FT-PSK** — fast transition between APs that share the mobility domain
-- **`usteer`** — assoc-time client steering on the roaming SSID only, with a boot-time check that every roaming BSS is actually tracked
+- **`usteer`** — client steering on the roaming SSID only (band steering up to 5 GHz, then a BTM request with a kick fallback), with a boot-time check that every roaming BSS is actually tracked
 - **Multi-SSID** — separate IoT SSID without FT (some IoT chips mishandle it)
 - **Anchor backhaul** — a marginal-signal repeater can pin to a different AP via a distinct backhaul SSID
 - **Profile-driven** — one `.conf` per node, baked into firmware via UCI defaults
@@ -77,8 +77,8 @@ flowchart LR
     apupper -.->|WDS 4-addr| ranchor
 ```
 
-- **Wired APs** sit on the LAN, join `br-lan`, and broadcast the main roaming SSID with 802.11r fast-transition. They also host a hidden WDS access point on a dedicated backhaul SSID. `usteer` runs here for assoc-time client steering.
-- **Wireless repeaters** join the backhaul as 4-address STAs, becoming L2-transparent extensions of `br-lan`. They can optionally advertise their own site-specific SSIDs (no FT, no `usteer`) for short-range / IoT clients that don't need to roam.
+- **Wired APs** sit on the LAN, join `br-lan`, and broadcast the main roaming SSID with 802.11r fast-transition. They also host a hidden WDS access point on a dedicated backhaul SSID. `usteer` runs here for client steering.
+- **Wireless repeaters** join the backhaul as 4-address STAs, becoming L2-transparent extensions of `br-lan`. They can optionally advertise their own site-specific SSIDs (no FT, no `usteer`) for short-range / IoT clients that don't need to roam, or serve the roaming SSID themselves — `usteer` and the re-check then run on them too.
 
 ## Configuration reference
 
@@ -86,7 +86,7 @@ Common values live in `profiles/common.conf`; per-node values live in each profi
 
 | Variable | Purpose |
 |----------|---------|
-| `OPENWRT_VERSION`, `OPENWRT_TARGET`, `OPENWRT_PROFILE` | ImageBuilder release and device target/profile |
+| `OPENWRT_VERSION`, `OPENWRT_TARGET`, `OPENWRT_PROFILE` | ImageBuilder release and device target/profile (`main` builds a nightly) |
 | `ROOT_PASSWORD` | Firmware root password (baked in — treat as a secret) |
 | `SSH_PUBKEY` | Optional authorized key for passwordless SSH |
 | `LAN_GATEWAY`, `LAN_DNS` | Upstream router and resolver |
@@ -94,6 +94,8 @@ Common values live in `profiles/common.conf`; per-node values live in each profi
 | `BACKHAUL_SSID`, `BACKHAUL_KEY` | Hidden WDS backhaul network and its key |
 | `MOBILITY_DOMAIN` | 4-hex 802.11r mobility domain, shared by every AP |
 | `PACKAGES` | ImageBuilder package list |
+
+Repeaters can also serve the roaming SSID: set `AP_ENABLED=1` with `AP_DEVICES` (the radios, space separated) and `AP_IOT_DEVICES` for the IoT SSID. The SSID, key and mobility domain must match the wired APs; when enabled, `usteer` and the re-check run on the repeater too.
 
 ## Security warning
 
