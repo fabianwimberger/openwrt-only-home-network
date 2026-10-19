@@ -5,6 +5,22 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v1.3.1] - 2026-10-19
+
+Builds now target OpenWrt 25.12.6, and the steering options follow the usteer package defaults instead of the earlier hand-tuned values.
+
+### Fixes
+
+- Return the steering options to the usteer package defaults: `aggressiveness 3`, `signal_diff_threshold 8`, `seen_policy_timeout` 30000 ms and `remote_update_interval` 1000 ms
+
+### Dependencies
+
+- Update wired AP and wireless repeater example profiles to OpenWrt 25.12.6
+
+### Documentation & Links
+
+- [README](https://github.com/fabianwimberger/openwrt-only-home-network#readme)
+
 ## [v1.3.0] - 2026-10-17
 
 Client steering is rebuilt around band steering with a signal guard plus a roam kick, repeaters can serve the roaming SSID on more than one radio, and a new service re-checks usteer's tracked BSSes after boot. Nightly images are supported.
