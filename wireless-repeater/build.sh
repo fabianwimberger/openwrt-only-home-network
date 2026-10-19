@@ -176,11 +176,11 @@ uci -q delete usteer.@usteer[0].ssid_list
 uci add_list usteer.@usteer[0].ssid_list=$(shell_quote "$AP_SSID")
 uci set usteer.@usteer[0].assoc_steering='0'
 uci set usteer.@usteer[0].roam_scan_snr='-65'
-uci set usteer.@usteer[0].signal_diff_threshold='10'
-uci set usteer.@usteer[0].seen_policy_timeout='15000'
+uci set usteer.@usteer[0].signal_diff_threshold='8'
+uci set usteer.@usteer[0].seen_policy_timeout='30000'
 uci set usteer.@usteer[0].band_steering_min_snr='-60'
-uci set usteer.@usteer[0].aggressiveness='2'
-uci set usteer.@usteer[0].remote_update_interval='5000'
+uci set usteer.@usteer[0].aggressiveness='3'
+uci set usteer.@usteer[0].remote_update_interval='1000'
 uci commit usteer
 /etc/init.d/usteer-recheck enable"
 fi
