@@ -101,18 +101,26 @@ uci set usteer.@usteer[0].debug_level='2'
 uci -q delete usteer.@usteer[0].ssid_list
 uci add_list usteer.@usteer[0].ssid_list='${AP_SSID}'
 uci set usteer.@usteer[0].assoc_steering='0'
-# The two settings the OpenWrt wiki recommends: roam scans are never triggered
-# until roam_scan_snr is set, and a non-zero signal_diff_threshold is what
-# enables AP steering at all.
-uci set usteer.@usteer[0].roam_scan_snr='-65'
+# The wiki recommends setting roam_scan_snr and signal_diff_threshold; a
+# non-zero diff is what enables AP steering at all. roam_scan_snr is an
+# absolute gate (a negative value is used as dBm, not as an SNR), so -75 only
+# touches clients that are genuinely weak and leaves a client sitting at -70
+# alone instead of moving it back and forth every minute.
+uci set usteer.@usteer[0].roam_scan_snr='-75'
 uci set usteer.@usteer[0].signal_diff_threshold='8'
 uci set usteer.@usteer[0].seen_policy_timeout='30000'
+# One roam attempt per client every 5 min, and a client has to be connected
+# for that long before it is considered at all.
+uci set usteer.@usteer[0].roam_trigger_interval='300000'
+# The kick timer after a transition request. 30 s gives a client that accepts
+# the request time to move before it is deauthenticated.
+uci set usteer.@usteer[0].roam_kick_delay='30000'
 # Band steering stays at its package defaults (interval 30000): the min-SNR
 # guard is what leaves far-away and 2.4 GHz-only clients where they are.
 uci set usteer.@usteer[0].band_steering_min_snr='-60'
 # Package default. 3 = transition request with disassociation imminent and a
-# countdown timer in the frame; a client that ignores it is dropped 10 s later
-# (kick_time). Level 1 is the passive level that never kicks anyone.
+# countdown timer in the frame; a client that ignores it is dropped after
+# roam_kick_delay. Level 1 is the passive level that never kicks anyone.
 uci set usteer.@usteer[0].aggressiveness='3'
 # Package default. Node sync is a LAN broadcast that wakes every sleeping
 # client, so raising it trades steering freshness for fewer wake-ups.
