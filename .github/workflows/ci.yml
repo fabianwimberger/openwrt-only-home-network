@@ -9,6 +9,9 @@ on:
 env:
   SHELLCHECK_VERSION: "v0.11.0"
 
+permissions:
+  contents: read
+
 jobs:
   lint:
     name: Lint
