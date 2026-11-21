@@ -80,14 +80,15 @@ uci set wireless.iot.key=$(shell_quote "$AP_IOT_KEY")
 uci set wireless.iot.ieee80211w='1'"
 fi
 
-# Hidden WDS-AP backhaul on 2.4 GHz
+# Hidden WDS-AP backhaul on 2.4 GHz. Each band can carry its own SSID so a
+# repeater only ever finds the one AP and band it is meant to use.
 BACKHAUL_24_BLOCK=""
 if [[ "${BACKHAUL_AP_24_ENABLED:-0}" == "1" ]]; then
     BACKHAUL_24_BLOCK="uci set wireless.bh0=wifi-iface
 uci set wireless.bh0.device='radio0'
 uci set wireless.bh0.mode='ap'
 uci set wireless.bh0.network='lan'
-uci set wireless.bh0.ssid=$(shell_quote "$BACKHAUL_SSID")
+uci set wireless.bh0.ssid=$(shell_quote "${BACKHAUL_24_SSID:-$BACKHAUL_SSID}")
 uci set wireless.bh0.encryption='psk2'
 uci set wireless.bh0.key=$(shell_quote "$BACKHAUL_KEY")
 uci set wireless.bh0.hidden='1'
@@ -102,7 +103,7 @@ if [[ "${BACKHAUL_AP_5_ENABLED:-0}" == "1" ]]; then
 uci set wireless.bh1.device='radio1'
 uci set wireless.bh1.mode='ap'
 uci set wireless.bh1.network='lan'
-uci set wireless.bh1.ssid=$(shell_quote "$BACKHAUL_SSID")
+uci set wireless.bh1.ssid=$(shell_quote "${BACKHAUL_5_SSID:-$BACKHAUL_SSID}")
 uci set wireless.bh1.encryption='psk2'
 uci set wireless.bh1.key=$(shell_quote "$BACKHAUL_KEY")
 uci set wireless.bh1.hidden='1'
