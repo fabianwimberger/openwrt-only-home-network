@@ -10,6 +10,7 @@ uci -q delete wireless.default_radio1
 uci set system.@system[0].hostname='${NODE_NAME}'
 uci set system.@system[0].timezone='${TIMEZONE}'
 uci set system.@system[0].zonename='${ZONENAME}'
+${LOG_BLOCK}
 uci commit system
 
 # === LAN (static, upstream router as gateway/DNS) ===
@@ -34,12 +35,15 @@ uci set wireless.radio0.country='${RADIO0_COUNTRY}'
 uci set wireless.radio0.channel='${RADIO0_CHANNEL}'
 uci set wireless.radio0.htmode='${RADIO0_HTMODE}'
 uci set wireless.radio0.disabled='0'
+# hostapd info lines make FT roams and BTM answers visible in logread.
+uci set wireless.radio0.log_level='1'
 
 uci -q delete wireless.radio1.txpower
 uci set wireless.radio1.country='${RADIO1_COUNTRY}'
 uci set wireless.radio1.channel='${RADIO1_CHANNEL}'
 uci set wireless.radio1.htmode='${RADIO1_HTMODE}'
 uci set wireless.radio1.disabled='0'
+uci set wireless.radio1.log_level='1'
 
 # === Main roaming SSID (WPA2-Personal + 802.11r FT-PSK) on 2.4 GHz ===
 uci set wireless.default_radio0=wifi-iface

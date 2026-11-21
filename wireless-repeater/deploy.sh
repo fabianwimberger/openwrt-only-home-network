@@ -1,12 +1,14 @@
 #!/usr/bin/env bash
+# Flash one profile over SSH with your key: upload, checksum, sysupgrade -T, sysupgrade -n,
+# wait for the node, post-check. The work is in ../tools/flash.sh; pass --dry-run to stop
+# after the `sysupgrade -T` check.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROFILES_DIR="$SCRIPT_DIR/profiles"
-COMMON_FILE="$PROFILES_DIR/common.conf"
 
 usage() {
-    echo "Usage: $0 <profile>"
+    echo "Usage: $0 [--dry-run] <profile>"
     echo ""
     echo "Available profiles:"
     for f in "$PROFILES_DIR"/*.conf; do
@@ -20,44 +22,7 @@ usage() {
 
 [[ $# -lt 1 ]] && usage
 
-PROFILE_NAME="$1"
-PROFILE_FILE="$PROFILES_DIR/${PROFILE_NAME}.conf"
+PROFILE_NAME="${!#}"
+[[ ! -f "$PROFILES_DIR/${PROFILE_NAME}.conf" ]] && echo "Error: profile '$PROFILE_NAME' not found" && exit 1
 
-[[ ! -f "$COMMON_FILE" ]] && echo "Error: common.conf not found" && exit 1
-[[ ! -f "$PROFILE_FILE" ]] && echo "Error: profile '$PROFILE_NAME' not found" && exit 1
-
-# shellcheck source=/dev/null
-source "$COMMON_FILE"
-# shellcheck source=/dev/null
-source "$PROFILE_FILE"
-
-OUTPUT_DIR="$SCRIPT_DIR/output/$PROFILE_NAME"
-# Nightly images carry no version in their file name.
-FIRMWARE_VERSION="${OPENWRT_VERSION}-"
-[[ "$OPENWRT_VERSION" == "main" ]] && FIRMWARE_VERSION=""
-FIRMWARE=$(find "$OUTPUT_DIR" -name "openwrt-${FIRMWARE_VERSION}${OPENWRT_TARGET//\//-}-*-sysupgrade.bin" -type f | sort | head -1)
-
-if [[ -z "$FIRMWARE" ]]; then
-    echo "Error: no OpenWrt $OPENWRT_VERSION sysupgrade firmware found in $OUTPUT_DIR"
-    echo "Run './build.sh $PROFILE_NAME' first."
-    exit 1
-fi
-
-FIRMWARE_NAME="$(basename "$FIRMWARE")"
-SSH_OPTS=(-F /dev/null -o StrictHostKeyChecking=accept-new)
-
-echo "=== Deploying to $DEVICE_IP ==="
-echo "    Firmware: $FIRMWARE_NAME"
-echo ""
-read -rp "Continue? [y/N] " confirm
-[[ "$confirm" != [yY] ]] && echo "Aborted." && exit 0
-
-echo "=== Uploading firmware ==="
-SSHPASS="$ROOT_PASSWORD" timeout 120 sshpass -e scp -O "${SSH_OPTS[@]}" "$FIRMWARE" "root@${DEVICE_IP}:/tmp/${FIRMWARE_NAME}"
-
-echo "=== Starting sysupgrade (no config preservation) ==="
-SSHPASS="$ROOT_PASSWORD" timeout 120 sshpass -e ssh "${SSH_OPTS[@]}" "root@${DEVICE_IP}" "sysupgrade -n /tmp/${FIRMWARE_NAME}" || true
-
-echo ""
-echo "=== Device is upgrading and will reboot ==="
-echo "    It should come back at $DEVICE_IP"
+exec "$SCRIPT_DIR/../tools/flash.sh" "$@"

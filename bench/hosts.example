@@ -1,0 +1,4 @@
+# name  address        interface (default eth0)
+# Copy to ~/.config/openwrt-bench/hosts and use the real addresses there.
+ap-upper  192.0.2.10
+ap-main   192.0.2.11

@@ -14,6 +14,7 @@ uci -q delete wireless.default_radio1
 uci set system.@system[0].hostname='${NODE_NAME}'
 uci set system.@system[0].timezone='${TIMEZONE}'
 uci set system.@system[0].zonename='${ZONENAME}'
+${LOG_BLOCK}
 uci commit system
 
 # === LAN (static, upstream router as gateway/DNS) ===
@@ -37,11 +38,14 @@ uci add_list network.br_lan.ports='eth0'
 uci -q delete wireless.radio0.txpower
 uci -q delete wireless.radio1.txpower
 uci set wireless.radio0.disabled='${RADIO0_DISABLED}'
+# hostapd info lines make FT roams and BTM answers visible in logread.
+uci set wireless.radio0.log_level='1'
 uci set wireless.radio0.country='${RADIO0_COUNTRY}'
 uci set wireless.radio0.channel='${RADIO0_CHANNEL}'
 uci set wireless.radio0.htmode='${RADIO0_HTMODE}'
 
 uci set wireless.radio1.disabled='${RADIO1_DISABLED}'
+uci set wireless.radio1.log_level='1'
 ${RADIO1_LINES}
 
 # === WDS 4-addr STA (backhaul to a wired AP) ===

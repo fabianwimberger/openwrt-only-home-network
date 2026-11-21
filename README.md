@@ -26,6 +26,8 @@ Off-the-shelf "mesh" systems work, but they lock you into a vendor cloud and hid
 |------|---------|
 | [`wired-ap/`](wired-ap/) | Wired access points — main roaming SSID + WDS backhaul + `usteer` |
 | [`wireless-repeater/`](wireless-repeater/) | Wireless repeaters — 4-addr STA backhaul + optional local SSID |
+| [`tools/`](tools/) | Flash, safe config change, reboot, survey, clients, roam log |
+| [`bench/`](bench/) | Wire and link-health bench for the wired APs |
 
 Each tier is a self-contained ImageBuilder project: `build.sh`, `deploy.sh`, `upgrade-all.sh`, plus `profiles/`, `templates/` and `files/`. Firmware is built with the official `openwrt/imagebuilder` container, so there is no per-tier Dockerfile. The two tiers share no scripts.
 
@@ -43,7 +45,7 @@ cp profiles/ap-main.conf.example profiles/ap-main.conf
 ./build.sh ap-main
 
 # 4. Flash via the OpenWrt web UI, or — if the device already runs
-#    OpenWrt with the same root password as in common.conf — deploy:
+#    OpenWrt and your key from SSH_PUBKEY is on it — deploy:
 ./deploy.sh ap-main
 ```
 
@@ -80,6 +82,23 @@ flowchart LR
 - **Wired APs** sit on the LAN, join `br-lan`, and broadcast the main roaming SSID with 802.11r fast-transition. They also host a hidden WDS access point on a dedicated backhaul SSID. `usteer` runs here for client steering.
 - **Wireless repeaters** join the backhaul as 4-address STAs, becoming L2-transparent extensions of `br-lan`. They can optionally advertise their own site-specific SSIDs (no FT, no `usteer`) for short-range / IoT clients that don't need to roam, or serve the roaming SSID themselves — `usteer` and the re-check then run on them too.
 
+## Tools
+
+All of them read node addresses from your untracked `profiles/*.conf` and print one verdict line at the end.
+
+| Command | What it does |
+|---------|--------------|
+| `make flash-all` | Flash garden, heatpump, door one by one, then ap-upper and ap-main together; `make flash-all-dry` stops after `sysupgrade -T` |
+| `tools/flash.sh [--dry-run] <node>...` | `scp -O`, checksum, `sysupgrade -T`, `sysupgrade -n`, drop the host key, wait for SSH, post-check |
+| `tools/safe-wifi-change.sh <node> -c '<uci...>'` | Apply a change with a 240 s rollback on the node; `confirm <node>` keeps it |
+| `tools/reboot-all.sh [--settle 300]` | Reboot every node together, wait, settle, check uplinks |
+| `tools/survey.sh` | Who hears whom per band, median dBm, plus foreign BSSes per channel |
+| `tools/clients.sh [--by ssid]` | Associated clients per node and SSID |
+| `tools/roamlog.sh <mac\|name>` | Time-ordered hostapd and usteer lines for one client from all nodes |
+| `bench/bench.sh` | `--quick`, `--phy`, `serve`, `cmd`, `stop`, `report`, `stress`; history in `~/.local/state/openwrt-bench/` |
+
+Client names for `clients.sh` and `roamlog.sh` come from `~/.config/openwrt-bench/names` (`mac name`, one per line). The bench reads its APs from `~/.config/openwrt-bench/hosts` (see `bench/hosts.example`).
+
 ## Configuration reference
 
 Common values live in `profiles/common.conf`; per-node values live in each profile `.conf`. Every key is documented inline in the shipped `.conf.example` files. The common ones:
@@ -95,6 +114,7 @@ Common values live in `profiles/common.conf`; per-node values live in each profi
 | `BACKHAUL_24_SSID`, `BACKHAUL_5_SSID` | Wired APs: per-band backhaul SSID, defaults to `BACKHAUL_SSID` |
 | `MOBILITY_DOMAIN` | 4-hex 802.11r mobility domain, shared by every AP |
 | `AP_IOT_DEVICES` | Radios that serve the IoT SSID, space separated; wired APs default to `radio0` |
+| `LOG_IP`, `LOG_PORT` | Optional remote syslog target (UDP, default port 514) |
 | `PACKAGES` | ImageBuilder package list |
 
 Repeaters can also serve the roaming SSID: set `AP_ENABLED=1` with `AP_DEVICES` (the radios, space separated) and `AP_IOT_DEVICES` for the IoT SSID. The SSID, key and mobility domain must match the wired APs; when enabled, `usteer` and the re-check run on the repeater too.
@@ -119,7 +139,7 @@ The wired AP tier needs both 2.4 GHz and 5 GHz radios and enough flash for `uste
 ## Requirements
 
 - **Docker** — for the ImageBuilder container
-- **`sshpass`** — only for `deploy.sh` and `upgrade-all.sh`
+- **SSH key access** — `SSH_PUBKEY` in `common.conf`, for `deploy.sh`, `upgrade-all.sh` and `tools/`
 - **`envsubst`** — usually shipped with `gettext`
 
 ## License

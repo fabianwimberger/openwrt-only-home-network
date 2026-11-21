@@ -42,34 +42,7 @@ for profile in "${PROFILES[@]}"; do
         "$SCRIPT_DIR/build.sh" "$profile" 2>&1 | tee -a "$log"
 
         echo "--- DEPLOY ---" | tee -a "$log"
-        # shellcheck source=/dev/null
-        [[ ! -f "$PROFILES_DIR/common.conf" ]] && echo "Error: $PROFILES_DIR/common.conf not found" >&2 && exit 1
-        [[ ! -f "$PROFILES_DIR/${profile}.conf" ]] && echo "Error: $PROFILES_DIR/${profile}.conf not found" >&2 && exit 1
-        source "$PROFILES_DIR/common.conf"
-        # shellcheck source=/dev/null
-        source "$PROFILES_DIR/${profile}.conf"
-
-        OUTPUT_DIR="$SCRIPT_DIR/output/$profile"
-        # Nightly images carry no version in their file name.
-        FIRMWARE_VERSION="${OPENWRT_VERSION}-"
-        [[ "$OPENWRT_VERSION" == "main" ]] && FIRMWARE_VERSION=""
-        FIRMWARE=$(find "$OUTPUT_DIR" -name "openwrt-${FIRMWARE_VERSION}${OPENWRT_TARGET//\//-}-*-sysupgrade.bin" -type f | sort | head -1)
-        if [[ -z "$FIRMWARE" ]]; then
-            echo "Error: no OpenWrt $OPENWRT_VERSION sysupgrade firmware found in $OUTPUT_DIR" >&2
-            exit 1
-        fi
-        FIRMWARE_NAME="$(basename "$FIRMWARE")"
-        SSH_OPTS=(-F /dev/null -o StrictHostKeyChecking=accept-new)
-
-        echo "Uploading $FIRMWARE_NAME to $DEVICE_IP ..." | tee -a "$log"
-        SSHPASS="$ROOT_PASSWORD" timeout 120 sshpass -e scp -O "${SSH_OPTS[@]}" "$FIRMWARE" "root@${DEVICE_IP}:/tmp/${FIRMWARE_NAME}" 2>&1 | tee -a "$log"
-
-        echo "Running sysupgrade on $DEVICE_IP ..." | tee -a "$log"
-        SSHPASS="$ROOT_PASSWORD" timeout 120 sshpass -e ssh "${SSH_OPTS[@]}" "root@${DEVICE_IP}" "sysupgrade -n /tmp/${FIRMWARE_NAME}" 2>&1 | tee -a "$log" || true
-
-        echo "Waiting for $DEVICE_IP to come back online ..." | tee -a "$log"
-        until ping -c1 -W5 -q "$DEVICE_IP" &>/dev/null; do sleep 5; done
-        echo "Device is back online." | tee -a "$log"
+        "$SCRIPT_DIR/../tools/flash.sh" "$profile" 2>&1 | tee -a "$log"
 
         echo "=== [$(date)] DONE: $profile ===" | tee -a "$log"
     ) &
