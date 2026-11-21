@@ -92,6 +92,7 @@ Common values live in `profiles/common.conf`; per-node values live in each profi
 | `LAN_GATEWAY`, `LAN_DNS` | Upstream router and resolver |
 | `TIMEZONE`, `ZONENAME` | POSIX `TZ` string and zoneinfo name |
 | `BACKHAUL_SSID`, `BACKHAUL_KEY` | Hidden WDS backhaul network and its key |
+| `BACKHAUL_24_SSID`, `BACKHAUL_5_SSID` | Wired APs: per-band backhaul SSID, defaults to `BACKHAUL_SSID` |
 | `MOBILITY_DOMAIN` | 4-hex 802.11r mobility domain, shared by every AP |
 | `PACKAGES` | ImageBuilder package list |
 

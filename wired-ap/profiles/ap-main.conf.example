@@ -19,6 +19,11 @@ RADIO1_HTMODE="HE80"
 BACKHAUL_AP_24_ENABLED="1"
 BACKHAUL_AP_5_ENABLED="1"
 
+# Optional per-band backhaul SSIDs (default: BACKHAUL_SSID). One SSID per
+# repeater keeps each repeater on the AP and band it is meant to use.
+#BACKHAUL_24_SSID="MyHome-Uplink-Anchor"
+#BACKHAUL_5_SSID="MyHome-Uplink-IoT"
+
 AP_FT_ENABLED="1"
 
 # Main roaming SSID (advertised on both radios).
