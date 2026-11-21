@@ -155,13 +155,18 @@ snap_all() { # snap_all SNAP0|SNAP1
 
 serve_host() {
     {
-        printf 'PHY=%s ME=%s\n' "$PHY" "$ME"
+        printf 'PHY=%s ME=%s STRESS=%s\n' "$PHY" "$ME" "${STRESS:-0}"
         cat <<'EOF'
 apk list --installed 2>/dev/null | grep -q '^iperf3-' || apk add iperf3 >/dev/null 2>&1
 if [ "$PHY" = 1 ]; then apk list --installed 2>/dev/null | grep -q '^mdio-tools-' || apk add mdio-tools >/dev/null 2>&1; fi
 running=0
 for p in /proc/[0-9]*; do [ "$(cat $p/comm 2>/dev/null)" = iperf3 ] && running=1; done
 [ "$running" = 1 ] || iperf3 -s -D
+# A second server port lets the stress run test AP to AP while the desktop tests the same AP.
+if [ "$STRESS" = 1 ]; then
+    n=0; for p in /proc/[0-9]*; do [ "$(cat $p/comm 2>/dev/null)" = iperf3 ] && n=$((n + 1)); done
+    [ "$n" -ge 2 ] || iperf3 -s -D -p 5202
+fi
 echo "$ME $(date +%s)" > /tmp/bench.owner
 EOF
     } | remote "${ADDR[$1]}"
@@ -244,6 +249,7 @@ cmd_run() {
     } >"$result"
     # Always clean up, also when interrupted; a pre-existing "serve" stays up.
     trap cleanup_run EXIT
+    trap "exit 130" INT TERM
 
     snap_all SNAP0
     printf '%-14s %6s %6s %6s %6s %6s %7s %5s %4s %5s %s\n' host up down bi-up bi-dn loss% maxrtt carr crc rxerr link
@@ -310,7 +316,7 @@ cmd_serve() {
     do_serve
     mark_serving
     echo "serving iperf3 on ${HOSTS[*]} (port $PORT); next: bench.sh cmd, finish with: bench.sh stop"
-    verdict_now serve
+    verdict_now ready
 }
 
 # Verdict against the counters taken at serve time, or against boot (3 carrier changes are normal) without a baseline.
@@ -521,7 +527,7 @@ cmd_stress() {
         case "$1" in --force) FORCE=1 ;; -*) die "unknown option $1" ;; [0-9]*) minutes="$1" ;; *) args+=("$1") ;; esac
         shift
     done
-    PHY=1
+    PHY=1 STRESS=1
     pick_hosts "${args[@]}"
     lock
     guard use "${HOSTS[@]}"
@@ -536,6 +542,7 @@ cmd_stress() {
     [[ "$pt" -lt 15 ]] && pt=15
     total=$((pt * 4))
     trap cleanup_run EXIT
+    trap "exit 130" INT TERM
 
     # Counters every 5 s: one long ssh per AP, one loop on the desktop.
     for name in "${HOSTS[@]}"; do
@@ -590,15 +597,14 @@ EOF
     fi
     echo "phase 4/4: TCP bidir to every AP plus AP-to-AP at the same time"
     for name in "${HOSTS[@]}"; do iperf -c "${ADDR[$name]}" -P 4 -t "$pt" --bidir >>"$dir/iperf.jsonl" & tp+=($!); done
-    [[ ${#HOSTS[@]} -ge 2 ]] && { "${SSH[@]}" "root@${ADDR[${HOSTS[1]}]}" "iperf3 -c ${ADDR[${HOSTS[0]}]} -P 4 -t $pt" >>"$dir/ap-to-ap.txt" 2>&1 & tp+=($!); }
-    wait "${tp[@]}"
+    [[ ${#HOSTS[@]} -ge 2 ]] && { "${SSH[@]}" "root@${ADDR[${HOSTS[1]}]}" "iperf3 -c ${ADDR[${HOSTS[0]}]} -p 5202 -P 4 -t $pt" >>"$dir/ap-to-ap.txt" 2>&1 & tp+=($!); }
+    wait "${tp[@]}" || true
     sleep 2
 
     for name in "${HOSTS[@]}"; do SNAP1[$name]="$(counters "$name")"; done
     DESK1="$(desk_counters "$DESKDEV")"
     for p in "${pingpids[@]}"; do kill -INT "$p" 2>/dev/null || true; done
     wait "${pingpids[@]}" 2>/dev/null || true
-    PIDS=()
 
     local l
     for name in "${HOSTS[@]}"; do
