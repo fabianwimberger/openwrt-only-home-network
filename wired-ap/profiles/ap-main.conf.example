@@ -30,7 +30,9 @@ AP_FT_ENABLED="1"
 AP_SSID="MyHome"
 AP_KEY="changeme-main"
 
-# Optional second SSID, e.g. for IoT (no FT, PMF on, 2.4 GHz only).
+# Optional second SSID, e.g. for IoT (no FT, PMF on, 2.4 GHz unless
+# AP_IOT_DEVICES lists more radios).
 AP_IOT_ENABLED="1"
 AP_IOT_SSID="MyHome-IoT"
 AP_IOT_KEY="changeme-iot"
+#AP_IOT_DEVICES="radio0 radio1"

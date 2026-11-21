@@ -66,18 +66,26 @@ if [[ -d "$SCRIPT_DIR/files" ]]; then
     cp -a "$SCRIPT_DIR/files/"* "$TMPDIR/files/" 2>/dev/null || true
 fi
 
-# Optional IoT SSID block (no FT, PMF on, 2.4 GHz only)
+# Optional IoT SSID block (no FT, PMF on). AP_IOT_DEVICES is a space separated
+# radio list as on the repeaters; it defaults to 2.4 GHz only.
 AP_IOT_BLOCK=""
 if [[ "${AP_IOT_ENABLED:-0}" == "1" ]]; then
-    AP_IOT_BLOCK="uci set wireless.iot=wifi-iface
-uci set wireless.iot.device='radio0'
-uci set wireless.iot.mode='ap'
-uci set wireless.iot.network='lan'
-uci set wireless.iot.ssid=$(shell_quote "$AP_IOT_SSID")
-uci set wireless.iot.encryption='psk2'
-uci set wireless.iot.wpa_pairwise='CCMP'
-uci set wireless.iot.key=$(shell_quote "$AP_IOT_KEY")
-uci set wireless.iot.ieee80211w='1'"
+    iot_n=0
+    for iot_dev in ${AP_IOT_DEVICES:-radio0}; do
+        iot_n=$((iot_n + 1))
+        iot_iface="iot"
+        [[ "$iot_n" -gt 1 ]] && iot_iface="iot${iot_n}"
+        AP_IOT_BLOCK+="uci set wireless.${iot_iface}=wifi-iface
+uci set wireless.${iot_iface}.device=$(shell_quote "$iot_dev")
+uci set wireless.${iot_iface}.mode='ap'
+uci set wireless.${iot_iface}.network='lan'
+uci set wireless.${iot_iface}.ssid=$(shell_quote "$AP_IOT_SSID")
+uci set wireless.${iot_iface}.encryption='psk2'
+uci set wireless.${iot_iface}.wpa_pairwise='CCMP'
+uci set wireless.${iot_iface}.key=$(shell_quote "$AP_IOT_KEY")
+uci set wireless.${iot_iface}.ieee80211w='1'
+"
+    done
 fi
 
 # Hidden WDS-AP backhaul on 2.4 GHz. Each band can carry its own SSID so a
