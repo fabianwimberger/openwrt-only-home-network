@@ -94,6 +94,7 @@ Common values live in `profiles/common.conf`; per-node values live in each profi
 | `BACKHAUL_SSID`, `BACKHAUL_KEY` | Hidden WDS backhaul network and its key |
 | `BACKHAUL_24_SSID`, `BACKHAUL_5_SSID` | Wired APs: per-band backhaul SSID, defaults to `BACKHAUL_SSID` |
 | `MOBILITY_DOMAIN` | 4-hex 802.11r mobility domain, shared by every AP |
+| `AP_IOT_DEVICES` | Radios that serve the IoT SSID, space separated; wired APs default to `radio0` |
 | `PACKAGES` | ImageBuilder package list |
 
 Repeaters can also serve the roaming SSID: set `AP_ENABLED=1` with `AP_DEVICES` (the radios, space separated) and `AP_IOT_DEVICES` for the IoT SSID. The SSID, key and mobility domain must match the wired APs; when enabled, `usteer` and the re-check run on the repeater too.
