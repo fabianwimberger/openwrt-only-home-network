@@ -114,6 +114,35 @@ desk_counters() { # carrier_changes crc rx_errors tx_errors
 
 delta() { [[ "$1" == - || "$2" == - ]] && echo 0 || echo $(($2 - $1)); }
 
+# speed_check <result.tsv> ; compares its up/down with the mean of the runs of the last 7 days that
+# carry the same cable tag. Prints "host up -NN% vs 7d mean; " per drop of more than 15 %, or
+# "@N" with the number of runs compared when nothing dropped.
+speed_check() {
+    local cutoff f files=()
+    cutoff="$(date -d '7 days ago' +%Y%m%d-%H%M%S)"
+    for f in "$STATE"/*.tsv; do
+        [[ -f "$f" && "$f" != "$1" && "$(basename "$f" .tsv)" > "$cutoff" ]] && files+=("$f")
+    done
+    ((${#files[@]})) || { echo "@0"; return 0; }
+    awk -F'\t' '
+        FNR == 1 { file++; cable = "-" }
+        /^# cable=/ { cable = substr($0, 9); if (file == 1) cur = cable; next }
+        /^#/ { next }
+        $2 !~ /^[0-9.]+$/ || $3 !~ /^[0-9.]+$/ { next }
+        file == 1 { up[$1] = $2; dn[$1] = $3; next }
+        cable == (cur == "" ? "-" : cur) { su[$1] += $2; sd[$1] += $3; n[$1]++; seen[FILENAME] = 1 }
+        END {
+            out = ""
+            for (h in up) if (n[h]) {
+                mu = su[h] / n[h]; md = sd[h] / n[h]
+                if (up[h] < 0.85 * mu) out = out sprintf("%s up %+.0f%% vs 7d mean; ", h, (up[h] - mu) / mu * 100)
+                if (dn[h] < 0.85 * md) out = out sprintf("%s down %+.0f%% vs 7d mean; ", h, (dn[h] - md) / md * 100)
+            }
+            if (out == "") { k = 0; for (s in seen) k++; out = "@" k }
+            print out
+        }' "$1" "${files[@]}"
+}
+
 # verdict <label> ; reads SNAP0 SNAP1 LOSS DESK0 DESK1 for HOSTS. Sets VERDICT and prints it.
 verdict() {
     local name c0 s0 crc0 rx0 p0 c1 s1 crc1 rx1 p1 dc dcrc drx dp parts="" bad=""
@@ -286,12 +315,26 @@ cmd_run() {
         printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' "$name" "$up" "$down" "$bi_up" "$bi_down" "${LOSS[$name]}" \
             "${maxrtt:-}" "$((c1 - c0))" "$((crc1 - crc0))" "$((rx1 - rx0))" "$(delta "$p0" "$p1")" >>"$result"
         if [[ -n "$previous" ]] && p=$(grep -m1 "^$name"$'\t' "$previous"); then
-            IFS=$'\t' read -r _ pu pd pbu pbd pl _ <<<"$p"
+            # A tab is whitespace to read, so empty bidir fields of a quick run would collapse and shift
+            # loss into the bidir columns; turn them into "-" and split on a non-whitespace character.
+            IFS='|' read -r _ pu pd pbu pbd pl _ <<<"$(awk -F'\t' -v OFS='|' '{for (i = 1; i <= NF; i++) if ($i == "") $i = "-"; $1 = $1; print}' <<<"$p")"
             printf '%-14s %6s %6s %6s %6s %6s   (previous run)\n' "" "$pu" "$pd" "${pbu:--}" "${pbd:--}" "$pl"
         fi
     done
     DESK1="$(desk_counters "$DESKDEV")"
     verdict "$([[ "$quick" == 1 ]] && echo quick || echo full) ${secs}s" >/dev/null
+    # Counters alone miss a link that stays error-free but got slow, so the speed is checked too.
+    local slow
+    slow="$(speed_check "$result")"
+    if [[ "$slow" == @0 ]]; then
+        VERDICT+="  | speed: no runs in the last 7 days to compare"
+    elif [[ "$slow" == @* ]]; then
+        VERDICT+="  | speed within 15% of the 7-day mean (${slow#@} runs)"
+    elif [[ "$VERDICT" == "WIRE OK"* ]]; then
+        VERDICT="WIRE NOT OK  ${slow%; }  [${VERDICT#WIRE OK  }]"
+    else
+        VERDICT="WIRE NOT OK  ${slow}${VERDICT#WIRE NOT OK  }"
+    fi
     echo "# verdict=$VERDICT" >>"$result"
     echo "$VERDICT"
 }
