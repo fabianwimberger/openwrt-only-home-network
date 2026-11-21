@@ -119,6 +119,14 @@ uci set wireless.bh1.wds='1'
 uci set wireless.bh1.isolate='0'"
 fi
 
+# Optional remote syslog (a Loki/Alloy syslog listener)
+LOG_BLOCK="# (no remote syslog configured)"
+if [[ -n "${LOG_IP:-}" ]]; then
+    LOG_BLOCK="uci set system.@system[0].log_ip=$(shell_quote "$LOG_IP")
+uci set system.@system[0].log_port=$(shell_quote "${LOG_PORT:-514}")
+uci set system.@system[0].log_proto='udp'"
+fi
+
 # Optional SSH key block
 SSH_BLOCK="# (no SSH key configured)"
 if [[ -n "${SSH_PUBKEY:-}" ]]; then
@@ -150,7 +158,7 @@ export LAN_GATEWAY LAN_DNS TIMEZONE ZONENAME
 export RADIO0_COUNTRY RADIO0_CHANNEL RADIO0_HTMODE
 export RADIO1_COUNTRY RADIO1_CHANNEL RADIO1_HTMODE
 export AP_SSID AP_KEY AP_FT_ENABLED MOBILITY_DOMAIN
-export AP_IOT_BLOCK BACKHAUL_24_BLOCK BACKHAUL_5_BLOCK SSH_BLOCK
+export AP_IOT_BLOCK BACKHAUL_24_BLOCK BACKHAUL_5_BLOCK SSH_BLOCK LOG_BLOCK
 
 envsubst < "$TEMPLATES_DIR/99-device-setup.tpl" > "$TMPDIR/files/etc/uci-defaults/99-device-setup"
 chmod +x "$TMPDIR/files/etc/uci-defaults/99-device-setup"

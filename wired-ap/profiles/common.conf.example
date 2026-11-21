@@ -47,3 +47,8 @@ PACKAGES="\
   prometheus-node-exporter-lua-wifi \
   prometheus-node-exporter-lua-wifi_stations \
   prometheus-node-exporter-lua-netstat"
+
+# Optional remote syslog: a host running a syslog listener (for example Grafana Alloy
+# `loki.source.syslog` in front of Loki). Leave empty to keep logs on the node only.
+LOG_IP=""
+LOG_PORT="514"
