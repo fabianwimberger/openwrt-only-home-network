@@ -4,3 +4,4 @@ output/
 logs/
 files/etc/uci-defaults/
 .env
+local/

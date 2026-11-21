@@ -32,11 +32,12 @@ jobs:
           # in variables and rendering them with envsubst.
           shellcheck -S warning -e SC2089,SC2090 -s bash \
             wired-ap/build.sh wired-ap/deploy.sh wired-ap/upgrade-all.sh \
-            wireless-repeater/build.sh wireless-repeater/deploy.sh wireless-repeater/upgrade-all.sh
+            wireless-repeater/build.sh wireless-repeater/deploy.sh wireless-repeater/upgrade-all.sh \
+            bench/bench.sh tools/*.sh
 
       - name: Check bash syntax
         run: |
-          for f in wired-ap/*.sh wireless-repeater/*.sh; do
+          for f in wired-ap/*.sh wireless-repeater/*.sh bench/*.sh tools/*.sh; do
             bash -n "$f"
           done
 
