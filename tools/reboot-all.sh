@@ -38,7 +38,6 @@ for n in "${NODES[@]}"; do
 done
 sleep 20
 
-declare -A BACK
 pids=()
 for n in "${NODES[@]}"; do
     (
@@ -61,7 +60,7 @@ bad=("${missing[@]}")
 line=""
 for n in "${NODES[@]}"; do
     [[ " ${missing[*]} " == *" $n (no ssh) "* ]] && continue
-    read -r up rel bss link carr < <(node_status "$n") || { bad+=("$n (status)"); continue; }
+    read -r _ _ bss link carr < <(node_status "$n") || { bad+=("$n (status)"); continue; }
     line+="$n bss=$bss link=$link carr=$carr | "
     [[ "$(node_tier "$n")" == wireless-repeater && "$link" == none ]] && bad+=("$n uplink down")
     [[ "$(node_tier "$n")" == wired-ap && "$carr" != - && "$carr" -gt 3 ]] && bad+=("$n wired carrier_changes $carr")

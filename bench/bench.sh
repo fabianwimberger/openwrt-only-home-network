@@ -196,7 +196,7 @@ EOF
 
 # ---- run ---------------------------------------------------------------------------------
 
-PRESERVED=0 PIDS=() STRESS_DIR=""
+PRESERVED=0 PIDS=()
 # A "serve" the user started explicitly stays up; anything the run installed goes again.
 cleanup_run() {
     local p n
@@ -233,7 +233,8 @@ cmd_run() {
     [[ -f "$STATE/serving" ]] && PRESERVED=1
     do_serve
     DESKDEV="$(desk_dev "${ADDR[${HOSTS[0]}]}")"
-    local result="$STATE/$(date +%Y%m%d-%H%M%S).tsv" previous
+    local result previous
+    result="$STATE/$(date +%Y%m%d-%H%M%S).tsv"
     previous="$(find "$STATE" -maxdepth 1 -name '*.tsv' | sort | tail -1 || true)"
     [[ -z "$cable" && -f "$STATE/cable" ]] && cable="$(cat "$STATE/cable")"
     {
@@ -250,7 +251,7 @@ cmd_run() {
     tests=$([[ "$quick" == 1 ]] && echo 2 || echo 3)
     for name in "${HOSTS[@]}"; do
         ip="${ADDR[$name]}"
-        local before after
+        local before
         before="${SNAP0[$name]}"
         ping_out="$(mktemp)"
         ping -c "$((secs * tests * 5 + 15))" -i 0.2 -q "$ip" >"$ping_out" 2>&1 &
@@ -528,7 +529,8 @@ cmd_stress() {
     [[ -f "$STATE/serving" ]] && PRESERVED=1
     do_serve
     DESKDEV="$(desk_dev "${ADDR[${HOSTS[0]}]}")"
-    local dir="$STATE/stress-$(date +%Y%m%d-%H%M%S)" name ip
+    local dir name ip
+    dir="$STATE/stress-$(date +%Y%m%d-%H%M%S)"
     mkdir -p "$dir"
     local total=$((minutes * 60)) pt=$((minutes * 15))
     [[ "$pt" -lt 15 ]] && pt=15
@@ -598,7 +600,7 @@ EOF
     wait "${pingpids[@]}" 2>/dev/null || true
     PIDS=()
 
-    local worst=0 l
+    local l
     for name in "${HOSTS[@]}"; do
         LOSS[$name]=0
         for f in "$dir"/ping-desktop-"$name".log "$dir"/ping-"$name"-*.log; do
@@ -609,7 +611,7 @@ EOF
         done
     done
     # Events between samples show flaps that a before/after delta would hide only if they cancel out.
-    local flaps=0 name2
+    local flaps=0
     for name in "${HOSTS[@]}"; do
         awk 'NR>1 && $2!=prev {n++} {prev=$2} END{exit n>0}' "$dir/counters-$name.tsv" || flaps=1
     done
@@ -619,7 +621,8 @@ EOF
         echo "$VERDICT"
         for name in "${HOSTS[@]}"; do echo "$name: $(head -1 "$dir/counters-$name.tsv") -> $(tail -1 "$dir/counters-$name.tsv")"; done
     } >"$dir/summary.txt"
-    local result="$STATE/$(date +%Y%m%d-%H%M%S).tsv"
+    local result
+    result="$STATE/$(date +%Y%m%d-%H%M%S).tsv"
     { echo "# date=$(date -Is)"; echo "# mode=stress"; echo "# verdict=$VERDICT"; } >"$result"
     echo "$VERDICT"
 }

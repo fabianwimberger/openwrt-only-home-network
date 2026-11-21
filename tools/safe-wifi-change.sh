@@ -80,7 +80,7 @@ if ! wait_ssh "$NODE" 90; then
     echo "UNREACHABLE $NODE: no ssh after the change, the node rolls itself back within ${SECS}s of arming"
     exit 1
 fi
-read -r up rel bss link carr < <(node_status "$NODE")
+read -r _ _ bss link _ < <(node_status "$NODE")
 tier="$(node_tier "$NODE")"
 ok=1
 [[ "$bss" -ge 1 ]] || ok=0
@@ -88,7 +88,7 @@ if [[ "$tier" == wireless-repeater ]]; then
     for _ in 1 2 3 4 5 6; do
         [[ "$link" != none ]] && break
         sleep 5
-        read -r up rel bss link carr < <(node_status "$NODE")
+        read -r _ _ bss link _ < <(node_status "$NODE")
     done
     [[ "$link" != none ]] || ok=0
 fi
