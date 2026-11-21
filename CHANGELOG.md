@@ -5,6 +5,18 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v1.4.0] - 2026-11-21
+
+Wired APs can give each band its own hidden backhaul SSID, so every repeater only finds the AP and band it is meant to use.
+
+### Features
+
+- Add `BACKHAUL_24_SSID` and `BACKHAUL_5_SSID` for wired APs; both default to `BACKHAUL_SSID`, so existing profiles build unchanged
+
+### Documentation & Links
+
+- [README](https://github.com/fabianwimberger/openwrt-only-home-network#readme)
+
 ## [v1.3.2] - 2026-10-24
 
 Client steering only touches genuinely weak clients now, and a client that accepts a roam request gets time to move before it is deauthenticated.
