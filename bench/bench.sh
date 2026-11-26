@@ -680,7 +680,7 @@ EOF
 
 sub="${1:-run}"
 case "$sub" in
-    run|serve|stop|cmd|report|stress|cable) shift ;;
+    run|serve|stop|cmd|report|stress|cable) if (($#)); then shift; fi ;;
     -h|--help|help) sed -n '2,15p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 0 ;;
     *) sub=run ;;
 esac
