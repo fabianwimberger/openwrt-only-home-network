@@ -96,7 +96,7 @@ All of them read node addresses from your untracked `profiles/*.conf` and print 
 | `tools/clients.sh [--by ssid]` | Associated clients per node and SSID |
 | `tools/roamlog.sh <mac\|name>` | Time-ordered hostapd and usteer lines for one client from all nodes |
 | `bench/bench.sh` | `--quick`, `--phy`, `serve`, `cmd`, `stop`, `report`, `stress`; history in `~/.local/state/openwrt-bench/` |
-| `bench/wire-watch.sh [Mbit/s] [secs] [host]` | Repeats short tests against one AP and prints only drops, for wiggling a cable; Ctrl-C prints a summary |
+| `bench/wire-watch.sh [Mbit/s] [secs] [host\|user@ip]` | Repeats short tests against one AP or any box over ssh and prints only drops, for wiggling a cable; Ctrl-C prints a summary |
 
 Client names for `clients.sh` and `roamlog.sh` come from `~/.config/openwrt-bench/names` (`mac name`, one per line). The bench reads its APs from `~/.config/openwrt-bench/hosts` (see `bench/hosts.example`).
 
