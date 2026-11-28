@@ -5,6 +5,26 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v1.6.0] - 2026-11-28
+
+A bench, a set of fleet tools and key-based flashing replace the sshpass flow.
+
+### Features
+
+- `bench/bench.sh` measures a wired link with `--quick` or `--phy`, keeps `serve`, `cmd`, `stop`, `report` and `stress` for longer runs, and ends every run with a one-line verdict; history lives in `~/.local/state/openwrt-bench/`.
+- `tools/` adds `flash.sh`, `safe-wifi-change.sh` with a 240 s rollback, `reboot-all.sh`, `survey.sh`, `clients.sh` and `roamlog.sh`, plus `make flash-all` for the whole fleet in one order.
+- `deploy.sh`, `upgrade-all.sh` and the tools use the key from `SSH_PUBKEY`; `sshpass` is no longer needed.
+- Templates bake `log_level=1` into `hostapd` and forward to a remote syslog target when `LOG_IP` is set (`LOG_PORT`, default 514).
+
+### Fixes
+
+- The bench prints the previous run correctly when a quick run leaves the bidir fields empty, and flags an up or down rate more than 15 % below the 7-day mean.
+- `stress` waits for its samplers and cleans them up, and AP-to-AP runs use their own iperf3 port.
+
+### Documentation & Links
+
+- [README](https://github.com/fabianwimberger/openwrt-only-home-network#readme)
+
 ## [v1.5.0] - 2026-11-21
 
 Wired APs can serve the IoT SSID on 5 GHz as well, like the repeaters.
